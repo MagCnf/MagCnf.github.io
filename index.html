@@ -1,5 +1,1430 @@
-<!DOCTYPE html>
-<html>
-<head><title>MagCnf</title></head>
-<body><h1>Hello from MagCnf</h1></body>
+<!doctype html>
+<!-- Author: parameswaran_r -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StockLedger · Construction ERP for Indian builders</title>
+<meta name="description" content="StockLedger runs purchase, stock, labour, subcontractors, machines, flat sales, GST, TDS and books for construction companies, in one app built for how Indian sites work.">
+<meta property="og:title" content="StockLedger · Construction ERP for Indian builders">
+<meta property="og:description" content="Purchase to payment, labour to GST: one ledger for every site.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://magcnf.github.io/">
+<meta property="og:image" content="https://magcnf.github.io/og.png">
+<link rel="canonical" href="https://magcnf.github.io/">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#fbf8f3">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23ffc65c'/%3E%3Cstop offset='1' stop-color='%23ff7a3d'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Cpath d='M18 40h28M18 31h20M18 22h12' stroke='%2307090f' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#fbf8f3; --bg2:#ffffff; --panel:#ffffff; --panel2:#fffdf9;
+  --line:rgba(24,28,45,.08); --line2:rgba(24,28,45,.14);
+  --text:#151a2b; --muted:#566079; --dim:#8a93a8;
+  --amber:#d98300; --orange:#ea5a1f; --teal:#0e9c88; --violet:#6656e8; --green:#128a52; --red:#d9364f; --blue:#2a74d6;
+  --grad:linear-gradient(135deg,#ffbe55 0%,#ff7a3d 100%);
+  --grad-text:linear-gradient(120deg,#e98a00 0%,#e4502a 60%,#c43f7a 100%);
+  --shadow:0 1px 2px rgba(24,28,45,.04),0 12px 32px -12px rgba(24,28,45,.14);
+  --radius:18px; --max:1180px;
+  --sans:'Plus Jakarta Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  --serif:'Instrument Serif',Georgia,serif; --mono:'JetBrains Mono',ui-monospace,Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--text);font:400 16px/1.6 var(--sans);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+img,svg{display:block;max-width:100%}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+::selection{background:rgba(255,170,60,.3)}
+.wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
+@media (max-width:600px){.wrap{padding:0 16px}}
+
+/* Background: soft glows, a faint grid, film grain */
+.bgfx{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
+.bgfx::before{content:"";position:absolute;inset:-20%;background:
+  radial-gradient(40% 35% at 15% 6%,rgba(255,190,110,.32),transparent 70%),
+  radial-gradient(35% 30% at 88% 14%,rgba(160,150,255,.22),transparent 70%),
+  radial-gradient(45% 40% at 55% 100%,rgba(80,220,190,.16),transparent 70%)}
+.bgfx::after{content:"";position:absolute;inset:0;opacity:.035;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.grid-lines{position:absolute;inset:0;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:64px 64px;mask-image:radial-gradient(70% 60% at 50% 0%,#000 30%,transparent 75%);opacity:.7}
+
+/* Blueprint drawn on scroll, the same plan and frame as the app's sign-in page */
+.bp{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
+.bp svg{position:absolute}
+.bp-plan{left:-70px;top:4vh;width:min(48vw,680px);transform:rotate(-8deg)}
+.bp-frame{right:-50px;top:10vh;width:min(46vw,660px)}
+.bp path{fill:none;stroke:rgba(150,95,30,.24);stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1}
+.bp path.thin{stroke-width:1;stroke:rgba(150,95,30,.18)}
+.bp path.faint{stroke-width:1;stroke:rgba(150,95,30,.15)}
+.bp-frame path{stroke:rgba(90,80,200,.22)}.bp-frame path.thin{stroke:rgba(90,80,200,.16)}
+@media (max-width:900px){.bp-plan{width:120vw;left:-30vw;opacity:.7}.bp-frame{width:100vw;right:-30vw;top:auto;bottom:-8vh;opacity:.7}}
+@media (prefers-reduced-motion:reduce){.bp path{stroke-dashoffset:0}.bp-frame,}
+
+/* Nav */
+.nav{position:fixed;top:0;left:0;right:0;z-index:50;transition:background .3s,border-color .3s,backdrop-filter .3s;border-bottom:1px solid transparent}
+.nav.scrolled{background:rgba(251,248,243,.8);backdrop-filter:blur(16px) saturate(140%);-webkit-backdrop-filter:blur(16px) saturate(140%);border-color:var(--line)}
+.nav .wrap{display:flex;align-items:center;gap:28px;height:68px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:-.02em;font-size:18px}
+.logo .mark{width:30px;height:30px;border-radius:9px;background:var(--grad);display:grid;place-items:center;box-shadow:0 6px 24px rgba(255,122,61,.35)}
+.nav-links{display:flex;gap:26px;margin-left:auto;font-size:14.5px;color:var(--muted)}
+.nav-links a{transition:color .2s}.nav-links a:hover{color:var(--text)}
+.nav .btn{margin-left:8px}
+@media (max-width:1180px) and (min-width:901px){.nav-links{gap:16px;font-size:13.5px}.nav-links a[href="#faq"],.nav-links a[href="#product"]{display:none}}
+.menu-btn{display:none;margin-left:auto;width:40px;height:40px;border-radius:10px;border:1px solid var(--line2)}
+.menu-btn span{display:block;width:18px;height:2px;background:var(--text);margin:4px auto;border-radius:2px;transition:transform .3s,opacity .3s}
+@media (max-width:900px){
+  .nav-links{position:fixed;top:68px;left:0;right:0;flex-direction:column;gap:0;background:rgba(251,248,243,.97);backdrop-filter:blur(16px);border-bottom:1px solid var(--line);padding:8px 16px 16px;transform:translateY(-12px);opacity:0;pointer-events:none;transition:.25s}
+  .nav-links a{padding:14px 4px;border-bottom:1px solid var(--line);font-size:16px}
+  .nav.open .nav-links{transform:none;opacity:1;pointer-events:auto}
+  .nav .btn.desk{display:none}
+  .menu-btn{display:block}
+  .nav.open .menu-btn span:nth-child(1){transform:translateY(6px) rotate(45deg)}
+  .nav.open .menu-btn span:nth-child(2){opacity:0}
+  .nav.open .menu-btn span:nth-child(3){transform:translateY(-6px) rotate(-45deg)}
+}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 20px;border-radius:12px;font-weight:600;font-size:15px;transition:transform .2s,box-shadow .2s,background .2s;white-space:nowrap}
+.btn-pri{background:var(--grad);color:#1a0d00;box-shadow:0 10px 26px -10px rgba(234,90,31,.55),inset 0 1px 0 rgba(255,255,255,.5)}
+.btn-pri:hover{transform:translateY(-2px);box-shadow:0 16px 40px -10px rgba(255,122,61,.75),inset 0 1px 0 rgba(255,255,255,.4)}
+.btn-ghost{border:1px solid var(--line2);background:#fff;box-shadow:0 1px 2px rgba(24,28,45,.05)}
+.btn-ghost:hover{background:#fffaf2;transform:translateY(-2px)}
+.btn svg{width:16px;height:16px}
+.btn s.us{font-weight:800;text-decoration:none;position:relative;margin-right:2px}
+.btn s.us::after{content:"";position:absolute;left:-3px;right:-3px;top:55%;height:2px;border-radius:2px;background:#8a1c00;transform:rotate(-5deg)}
+.btn s.us{color:rgba(26,13,0,.62)}
+s.was{text-decoration:none;position:relative;color:var(--dim);margin-right:.25em;white-space:nowrap}
+s.was::after{content:"";position:absolute;left:-2px;right:-2px;top:52%;height:2px;border-radius:2px;background:var(--red);transform:rotate(-4deg)}
+.eyebrow s.was{color:var(--dim)}
+
+/* Type */
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font:600 12.5px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--amber)}
+.eyebrow::before{content:"";width:18px;height:1px;background:currentColor}
+h1,h2,h3{letter-spacing:-.03em;line-height:1.08;font-weight:800}
+.serif{font-family:var(--serif);font-weight:400;font-style:italic;letter-spacing:-.01em}
+.grad-text{background:var(--grad-text);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{color:var(--muted);font-size:18px;max-width:620px}
+section{position:relative;padding:120px 0}
+@media (max-width:700px){section{padding:84px 0}}
+.sec-head{max-width:760px;margin-bottom:56px}
+.sec-head h2{font-size:clamp(34px,5vw,56px);margin:16px 0 18px}
+.center{text-align:center;margin-left:auto;margin-right:auto}
+.center .lead{margin:0 auto}
+
+/* Hero */
+.hero{padding:150px 0 90px;overflow:hidden}
+.hero-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:72px;align-items:center}
+.hero-copy{text-align:center;display:flex;flex-direction:column;align-items:center}
+.hero-copy .lead{margin:0 auto}
+.hero-copy .hero-cta,.hero-copy .hero-meta{justify-content:center}
+.pill{display:inline-flex;align-items:center;gap:10px;padding:6px 14px 6px 6px;border-radius:99px;border:1px solid var(--line2);background:#fff;box-shadow:0 1px 2px rgba(24,28,45,.05);font-size:13.5px;color:var(--muted)}
+.pill b{background:rgba(69,214,143,.14);color:var(--green);border-radius:99px;padding:3px 10px;font-weight:600;font-size:12px}
+.hero h1{font-size:clamp(40px,7.4vw,92px);margin:26px 0 24px;max-width:1100px}
+.pill{max-width:100%;white-space:normal;text-align:left}
+.hero h1 .serif{font-size:1.08em}
+.hero .lead{font-size:clamp(17px,2vw,20px)}
+.hero-cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:36px}
+.hero-meta{display:flex;flex-wrap:wrap;gap:22px;margin-top:30px;color:var(--dim);font-size:14px}
+.hero-meta span{display:flex;align-items:center;gap:8px}
+.hero-meta svg{width:16px;height:16px;color:var(--green)}
+
+/* App window mockup */
+.stage{position:relative;perspective:1800px}
+.window{position:relative;border-radius:20px;background:#fff;border:1px solid var(--line2);box-shadow:0 50px 100px -40px rgba(60,40,20,.28),0 2px 6px rgba(24,28,45,.05);overflow:hidden;transform:rotateX(8deg) scale(.98);transform-origin:50% 0;transition:transform 1.2s cubic-bezier(.2,.7,.2,1)}
+.stage.in .window{transform:none}
+.win-bar{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line);background:#f7f4ee}
+.win-bar i{width:11px;height:11px;border-radius:50%;background:#ff5f57}.win-bar i:nth-child(2){background:#febc2e}.win-bar i:nth-child(3){background:#28c840}
+.win-url{margin:0 auto;font:500 12px var(--mono);color:var(--dim);background:#fff;padding:5px 14px;border-radius:8px;border:1px solid var(--line)}
+.app{display:grid;grid-template-columns:200px 1fr;min-height:470px}
+.side{border-right:1px solid var(--line);background:#fcfaf6;padding:16px 12px;display:flex;flex-direction:column;gap:3px;font-size:13px;color:var(--muted)}
+.side .co{display:flex;align-items:center;gap:8px;padding:8px 10px 14px;font-weight:700;color:var(--text);font-size:13.5px}
+.side .co i{width:22px;height:22px;border-radius:7px;background:var(--grad)}
+.side a{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px}
+.side a.on{background:rgba(255,170,60,.14);color:#b06a00;font-weight:600}
+.side a svg{width:15px;height:15px;opacity:.85}
+.side .badge{margin-left:auto;font:600 10.5px var(--mono);background:rgba(255,107,122,.16);color:var(--red);padding:1px 7px;border-radius:99px}
+.main{padding:22px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.main-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.main-top h4{font-size:18px;letter-spacing:-.02em}
+.main-top small{color:var(--dim);font-size:12px}
+.chips{display:flex;gap:6px}
+.chip{font-size:11.5px;padding:5px 11px;border-radius:99px;border:1px solid var(--line2);color:var(--muted)}
+.chip.on{background:var(--text);color:var(--bg);border-color:var(--text);font-weight:600}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.kpi{border:1px solid var(--line);border-radius:14px;padding:14px;background:rgba(24,28,45,.02)}
+.kpi small{display:block;color:var(--dim);font-size:11.5px}
+.kpi b{display:block;font:600 21px/1.3 var(--mono);letter-spacing:-.03em;margin-top:4px}
+.kpi em{font-style:normal;font-size:11px;color:var(--green)}
+.kpi em.r{color:var(--red)}
+.panels{display:grid;grid-template-columns:1.45fr 1fr;gap:12px;flex:1}
+.panel{border:1px solid var(--line);border-radius:14px;padding:14px;background:rgba(24,28,45,.02);min-width:0}
+.panel h5{font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:12px;display:flex;justify-content:space-between}
+.bars{display:flex;align-items:flex-end;gap:12px;height:150px;padding-top:6px}
+.bar{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
+.bar .pair{display:flex;gap:3px;align-items:flex-end;height:100%;width:100%;justify-content:center}
+.bar .pair i{width:42%;max-width:16px;border-radius:5px 5px 2px 2px;background:var(--grad);height:0;transition:height 1.2s cubic-bezier(.2,.7,.2,1)}
+.bar .pair i+i{background:rgba(143,125,255,.65)}
+.bar small{font:500 10px var(--mono);color:var(--dim)}
+.legend{display:flex;gap:14px;font-size:11px;color:var(--dim);margin-top:10px}
+.legend span::before{content:"";display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--amber);margin-right:6px}
+.legend span+span::before{background:var(--violet)}
+.todo{display:flex;flex-direction:column;gap:8px}
+.todo div{display:flex;gap:10px;align-items:center;font-size:12.5px;padding:9px 10px;border-radius:10px;background:rgba(24,28,45,.025);border:1px solid var(--line)}
+.todo i{width:8px;height:8px;border-radius:50%;flex:none}
+.todo span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.todo b{font:600 11px var(--mono);color:var(--muted)}
+
+/* Floating cards around the window */
+.float{position:absolute;z-index:3;border-radius:16px;padding:14px 16px;background:rgba(255,255,255,.9);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--line2);box-shadow:0 30px 60px -24px rgba(60,40,20,.3);font-size:13px;animation:bob 6s ease-in-out infinite}
+.float small{color:var(--dim);font-size:11.5px;display:block}
+.float b{font-weight:700}
+.f1{left:-34px;top:110px;display:flex;gap:12px;align-items:center}
+.f2{right:-30px;top:56px;animation-delay:-2s}
+.f3{right:40px;bottom:-26px;display:flex;gap:12px;align-items:center;animation-delay:-4s}
+.geo{width:46px;height:46px;flex:none}
+.ok{display:inline-flex;align-items:center;gap:6px;color:var(--green);font-weight:600;font-size:12px}
+.ok::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 0 4px rgba(69,214,143,.18)}
+.ring{width:42px;height:42px;flex:none}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@media (max-width:1100px){.f1{left:-10px}.f2{right:-10px}}
+@media (max-width:900px){
+  .app{grid-template-columns:1fr}.side{display:none}
+  .kpis{grid-template-columns:repeat(2,1fr)}.panels{grid-template-columns:1fr}
+  .f1,.f2{display:none}.f3{right:12px;bottom:-22px}
+}
+@media (max-width:520px){.main{padding:14px}.chips{display:none}.f3{display:none}.kpi b{font-size:17px}}
+
+/* Built-for strip */
+.strip{padding:56px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:rgba(255,255,255,.55)}
+.strip p{text-align:center;color:var(--dim);font-size:13px;letter-spacing:.06em;text-transform:uppercase;font-weight:600;margin-bottom:22px}
+.marquee{overflow:hidden;mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)}
+.marquee-track{display:flex;gap:56px;width:max-content;animation:scroll 38s linear infinite}
+.marquee-track span{display:flex;align-items:center;gap:12px;font-size:20px;font-weight:700;color:#3b4459;letter-spacing:-.02em;white-space:nowrap}
+.marquee-track span::before{content:"✦";color:var(--amber);font-size:14px}
+@keyframes scroll{to{transform:translateX(-50%)}}
+
+/* Pain cards */
+.pain-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.pain{position:relative;padding:26px;border-radius:var(--radius);border:1px solid var(--line);background:var(--panel);box-shadow:var(--shadow);overflow:hidden;transition:border-color .3s,transform .3s}
+.pain:hover{border-color:rgba(255,107,122,.35);transform:translateY(-4px)}
+.pain .x{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:rgba(255,107,122,.12);color:var(--red);margin-bottom:18px}
+.pain h3{font-size:18px;letter-spacing:-.02em;margin-bottom:8px}
+.pain p{color:var(--muted);font-size:14.5px}
+.pain .fix{margin-top:16px;padding-top:14px;border-top:1px dashed var(--line2);font-size:13.5px;color:var(--green);display:flex;gap:8px}
+@media (max-width:900px){.pain-grid{grid-template-columns:1fr 1fr}}
+@media (max-width:600px){.pain-grid{grid-template-columns:1fr}}
+
+/* Bento modules */
+.bento{display:grid;grid-template-columns:repeat(6,1fr);grid-auto-rows:minmax(210px,auto);gap:16px}
+.cell{position:relative;border-radius:22px;border:1px solid var(--line);background:#fff;box-shadow:var(--shadow);padding:26px;overflow:hidden;isolation:isolate;transition:border-color .3s}
+.cell::after{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(400px circle at var(--mx,50%) var(--my,0%),rgba(255,181,71,.10),transparent 45%);opacity:0;transition:opacity .3s}
+.cell:hover{border-color:var(--line2)}.cell:hover::after{opacity:1}
+.cell .ic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;margin-bottom:18px;border:1px solid var(--line2);background:rgba(24,28,45,.04)}
+.cell .ic svg{width:20px;height:20px}
+.cell h3{font-size:20px;letter-spacing:-.02em;margin-bottom:8px}
+.cell p{color:var(--muted);font-size:14.5px;max-width:440px}
+.cell ul{list-style:none;display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}
+.cell li{font-size:12px;padding:4px 10px;border-radius:99px;background:rgba(24,28,45,.05);border:1px solid var(--line);color:#3b4459}
+.c-a{grid-column:span 4;grid-row:span 2}.c-b{grid-column:span 2;grid-row:span 2}
+.c-c,.c-d,.c-e{grid-column:span 2}
+.c-f{grid-column:span 3}.c-g{grid-column:span 3}
+.c-h,.c-i,.c-j{grid-column:span 2}
+@media (max-width:1000px){.bento{grid-template-columns:repeat(2,1fr)}.bento>*{grid-column:span 1!important;grid-row:auto!important}.c-a{grid-column:span 2!important}}
+@media (max-width:620px){.bento{grid-template-columns:1fr}.bento>*{grid-column:auto!important}}
+
+/* Flow inside the big bento cell */
+.flow{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px;align-items:center}
+.step{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;border:1px solid var(--line2);background:#fffaf2;font-size:13.5px;font-weight:600}
+.step small{display:block;font:500 10.5px var(--mono);color:var(--dim);font-weight:500}
+.step .n{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;font:600 11px var(--mono);background:rgba(255,181,71,.14);color:var(--amber)}
+.arrow{color:var(--dim);font-size:18px}
+.docnums{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px;margin-top:22px}
+.docnums div{font:500 12px var(--mono);padding:10px 12px;border-radius:10px;background:rgba(24,28,45,.03);border:1px solid var(--line);color:#3b4459;display:flex;justify-content:space-between;gap:8px}
+.docnums b{color:var(--amber);font-weight:600;white-space:nowrap}
+
+/* Phone inside the bento */
+.phone{width:188px;margin:22px auto 0;border-radius:30px;padding:9px;background:#05070c;border:1px solid var(--line2);box-shadow:0 30px 60px -24px rgba(30,25,40,.45)}
+.phone-in{border-radius:23px;background:linear-gradient(180deg,#151b30,#0d1122);padding:14px 12px;height:290px;display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden}
+.phone-in .notch{width:60px;height:16px;border-radius:99px;background:#05070c;margin:-6px auto 4px}
+.selfie{height:118px;border-radius:16px;position:relative;overflow:hidden;background:radial-gradient(60% 60% at 50% 40%,rgba(255,181,71,.25),transparent 70%),#0a0e1b;display:grid;place-items:center;border:1px solid var(--line)}
+.selfie svg{width:64px;height:64px;color:#3b4459}
+.selfie::after{content:"";position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--teal),transparent);animation:scan 2.6s ease-in-out infinite}
+@keyframes scan{0%{top:8%}50%{top:88%}100%{top:8%}}
+.phone .row{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
+.phone .row b{color:var(--text);font:600 11px var(--mono)}
+.phone .cta{margin-top:auto;height:36px;border-radius:11px;background:var(--grad);color:#1a0d00;font-weight:700;font-size:12.5px;display:grid;place-items:center}
+
+.phone{color:#eef1f7}
+.phone-in{background:linear-gradient(180deg,#1b2238,#10152a)}
+.phone .row{color:#a3acc0}.phone .row b{color:#fff}
+.selfie{border-color:rgba(255,255,255,.08);background:radial-gradient(60% 60% at 50% 40%,rgba(255,181,71,.28),transparent 70%),#0d1222}
+.selfie svg{color:#cfd5e2}
+.selfie::after{background:linear-gradient(90deg,transparent,#3ee0c5,transparent)}
+/* Quality */
+.qual{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+@media (max-width:1000px){.qual{grid-template-columns:1fr 1fr}}
+@media (max-width:600px){.qual{grid-template-columns:1fr}}
+.qual .tr .ic{background:rgba(255,170,60,.14);color:#b06a00}
+.qual .tr b.big{display:block;font:600 30px/1 var(--mono);letter-spacing:-.04em;margin-bottom:10px}
+
+/* Showcase tabs */
+.tabs{display:flex;gap:6px;padding:6px;border-radius:14px;border:1px solid var(--line);background:#fff;box-shadow:var(--shadow);width:max-content;max-width:100%;overflow-x:auto;margin:0 auto 34px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:10px 18px;border-radius:10px;font-size:14px;font-weight:600;color:var(--muted);white-space:nowrap;transition:.2s}
+.tab[aria-selected="true"]{background:var(--text);color:var(--bg)}
+.show{display:grid;grid-template-columns:.9fr 1.1fr;gap:48px;align-items:center}
+.show-copy h3{font-size:clamp(28px,3.4vw,40px);margin-bottom:16px}
+.show-copy p{color:var(--muted);font-size:16.5px}
+.checks{list-style:none;margin-top:24px;display:flex;flex-direction:column;gap:12px}
+.checks li{display:flex;gap:12px;font-size:15px;color:#2c3447}
+.checks li::before{content:"";flex:none;width:20px;height:20px;margin-top:2px;border-radius:6px;background:rgba(69,214,143,.14) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%2345d68f' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 10.5l3.2 3L15 7'/%3E%3C/svg%3E") center/16px no-repeat}
+.pane{display:none}.pane.on{display:grid;animation:fade .5s ease}
+@keyframes fade{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.screen{border-radius:20px;border:1px solid var(--line2);background:#fff;padding:20px;box-shadow:0 40px 90px -40px rgba(60,40,20,.3);min-width:0;overflow:hidden}
+.screen-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.screen-head b{font-size:15px;letter-spacing:-.01em}
+.screen-head small{color:var(--dim);font-size:12px}
+.tag{font:600 11px var(--mono);padding:4px 9px;border-radius:7px}
+.tag.g{background:rgba(69,214,143,.14);color:var(--green)}.tag.a{background:rgba(255,181,71,.14);color:var(--amber)}
+.tag.r{background:rgba(255,107,122,.14);color:var(--red)}.tag.v{background:rgba(102,86,232,.12);color:var(--violet)}.tag.b{background:rgba(90,169,255,.14);color:var(--blue)}
+/* attendance grid */
+.att{display:grid;grid-template-columns:minmax(110px,1.6fr) repeat(7,1fr) .9fr;gap:5px;font-size:12px;min-width:0}
+.att .h{color:var(--dim);font:500 10.5px var(--mono);text-align:center;padding-bottom:4px}
+.att .h:first-child{text-align:left}
+.att .nm{display:flex;flex-direction:column;justify-content:center;padding-right:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.att .nm small{color:var(--dim);font-size:10.5px}
+.att .d{height:30px;border-radius:7px;display:grid;place-items:center;font:600 11px var(--mono)}
+.d.p{background:rgba(69,214,143,.16);color:var(--green)}.d.h{background:rgba(255,181,71,.16);color:var(--amber)}
+.d.a{background:rgba(255,107,122,.13);color:var(--red)}.d.s{background:rgba(24,28,45,.03);color:var(--dim)}
+.att .t{font:600 12px var(--mono);display:grid;place-items:center end}
+.screen-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:16px;padding-top:14px;border-top:1px solid var(--line);font-size:13px;color:var(--muted);flex-wrap:wrap}
+.screen-foot b{color:var(--text);font:600 15px var(--mono)}
+.mini-btn{height:32px;padding:0 14px;border-radius:9px;background:var(--grad);color:#1a0d00;font-weight:700;font-size:12.5px;display:inline-grid;place-items:center}
+/* ledger-like rows */
+.rows{display:flex;flex-direction:column}
+.rows div{display:grid;grid-template-columns:1fr auto;gap:12px;padding:10px 2px;border-bottom:1px dashed var(--line);font-size:13.5px}
+.rows div span:first-child{color:#3b4459}
+.rows div span:last-child{font:600 13px var(--mono)}
+.rows div.tot{border-bottom:0;border-top:1px solid var(--line2);margin-top:4px;padding-top:12px}
+.rows div.tot span{color:var(--text);font-weight:700}
+.rows .neg{color:var(--red)}.rows .pos{color:var(--green)}
+.gst{display:grid;grid-template-columns:62px 1fr auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px dashed var(--line);font-size:13px}
+.gst code{font:600 11px var(--mono);color:var(--amber);background:rgba(255,181,71,.1);padding:3px 7px;border-radius:6px;text-align:center}
+.gst span{color:#3b4459}.gst b{font:600 13px var(--mono)}
+.match{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
+.match div{border-radius:12px;padding:10px;background:rgba(24,28,45,.03);border:1px solid var(--line)}
+.match small{display:block;font-size:10.5px;color:var(--dim)}
+.match b{font:600 15px var(--mono)}
+/* machine list */
+.mach{display:flex;flex-direction:column;gap:9px}
+.mach div{display:grid;grid-template-columns:40px 1fr auto;gap:12px;align-items:center;padding:11px 12px;border-radius:13px;border:1px solid var(--line);background:rgba(24,28,45,.02)}
+.mach .mi{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;background:rgba(24,28,45,.05);font:700 11px var(--mono);color:var(--amber)}
+.mach b{font-size:13.5px;display:block}.mach small{color:var(--dim);font-size:11.5px}
+.qr{display:flex;gap:14px;align-items:center;margin-top:14px;padding:12px;border-radius:13px;border:1px dashed var(--line2)}
+.qr svg{width:58px;height:58px;flex:none;border-radius:6px;background:#fff;padding:4px}
+.qr p{font-size:12.5px;color:var(--muted)}
+@media (max-width:900px){.show{grid-template-columns:1fr;gap:32px}.match{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:520px){.att{grid-template-columns:minmax(84px,1.4fr) repeat(7,1fr) .9fr;gap:3px}.att .d{height:26px;font-size:10px}.screen{padding:14px}}
+
+/* Accounts */
+.acct{display:grid;grid-template-columns:1fr 1.05fr;gap:48px;align-items:center}
+.acct-list{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:30px}
+.acct-item{padding:18px;border-radius:16px;background:#fff;border:1px solid var(--line);box-shadow:var(--shadow)}
+.acct-item b{display:flex;align-items:center;gap:10px;font-size:15px;letter-spacing:-.01em}
+.acct-item b i{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;background:rgba(255,170,60,.14);color:#b06a00;font:700 11px var(--mono);font-style:normal;flex:none}
+.acct-item p{color:var(--muted);font-size:13.5px;margin-top:8px}
+.vchips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.vchips span{font:600 11px var(--mono);padding:5px 10px;border-radius:8px;border:1px solid var(--line2);color:var(--muted)}
+.vchips span.on{background:var(--text);color:#fff;border-color:var(--text)}
+.tb{display:grid;grid-template-columns:1fr auto auto;font-size:13px}
+.tb>div{padding:9px 4px;border-bottom:1px dashed var(--line)}
+.tb .th{font:600 10.5px var(--mono);color:var(--dim);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--line2)}
+.tb .num{font:600 12.5px var(--mono);text-align:right;padding-left:22px}
+.tb .grp{color:var(--dim);font-size:11.5px}
+.tb .sum{border-bottom:0;border-top:1px solid var(--line2);font-weight:700}
+.recon{display:flex;gap:12px;align-items:center;margin-top:16px;padding:12px 14px;border-radius:14px;background:rgba(18,138,82,.07);border:1px solid rgba(18,138,82,.2);font-size:13px}
+.recon b{color:var(--green)}
+.recon i{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:var(--green);color:#fff;font-style:normal;font-weight:800;flex:none}
+@media (max-width:900px){.acct{grid-template-columns:1fr;gap:32px}}
+@media (max-width:520px){.acct-list{grid-template-columns:1fr}}
+.strike-title{font-size:clamp(34px,5vw,56px)}
+
+/* People */
+@media (min-width:901px){.acct.rev>.screen{order:-1}}
+.slip-head{display:flex;gap:12px;align-items:center;margin-bottom:14px}
+.slip-head .av{width:40px;height:40px;border-radius:12px;background:var(--grad);display:grid;place-items:center;font:800 14px var(--sans);color:#1a0d00}
+.slip-head b{display:block;font-size:14.5px}.slip-head small{color:var(--dim);font-size:12px}
+.slip{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.slip h6{font:600 10.5px var(--mono);color:var(--dim);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.slip .rows div{padding:8px 2px;font-size:12.5px}
+.slip .rows div span:last-child{font-size:12px}
+.net{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding:14px 16px;border-radius:14px;background:linear-gradient(135deg,#fff1dc,#ffe6d6);border:1px solid rgba(234,90,31,.18)}
+.net span{font-size:13px;color:var(--muted)}.net b{font:600 22px var(--mono);letter-spacing:-.03em}
+.leave{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.leave span{font:600 11px var(--mono);padding:6px 10px;border-radius:8px;background:rgba(24,28,45,.04);border:1px solid var(--line);color:var(--muted)}
+.leave span b{color:var(--text)}
+@media (max-width:520px){.slip{grid-template-columns:1fr}}
+
+/* What you get */
+.product{position:relative;border-radius:28px;padding:clamp(28px,5vw,52px);margin-bottom:18px;overflow:hidden;border:1px solid var(--line2);background:radial-gradient(60% 120% at 0% 0%,rgba(255,190,110,.4),transparent 60%),radial-gradient(50% 100% at 100% 100%,rgba(80,220,190,.22),transparent 60%),#fff;box-shadow:var(--shadow);display:grid;grid-template-columns:1.1fr 1fr;gap:36px;align-items:center}
+.product h3{font-size:clamp(30px,4.2vw,48px);letter-spacing:-.035em;line-height:1.05}
+.product p{color:var(--muted);font-size:16px}
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.vs div{border-radius:16px;padding:16px;border:1px solid var(--line);background:rgba(255,255,255,.75)}
+.vs h6{font:600 11px var(--mono);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+.vs .yes h6{color:var(--green)}.vs .no h6{color:var(--dim)}
+.vs ul{list-style:none;display:flex;flex-direction:column;gap:7px;font-size:13.5px}
+.vs .no li{color:var(--dim);text-decoration:line-through;text-decoration-color:rgba(217,54,79,.5)}
+.vs .yes li::before{content:"✓ ";color:var(--green);font-weight:800}
+@media (max-width:900px){.product{grid-template-columns:1fr}}
+@media (max-width:460px){.vs{grid-template-columns:1fr}}
+.owner{display:grid;grid-template-columns:1fr 1.3fr;gap:36px;align-items:center;margin-bottom:18px;border-radius:28px;padding:clamp(28px,5vw,52px);background:linear-gradient(135deg,#151a2b,#2a2140);color:#fff;box-shadow:0 40px 80px -40px rgba(30,20,60,.5);position:relative;overflow:hidden}
+.owner::before{content:"";position:absolute;width:420px;height:420px;right:-140px;top:-180px;border-radius:50%;background:radial-gradient(circle,rgba(255,160,80,.45),transparent 65%)}
+.owner h3{position:relative;font-size:clamp(32px,4.6vw,54px);letter-spacing:-.04em;line-height:1.02}
+.owner h3 .serif{background:linear-gradient(120deg,#ffc65c,#ff8a5c);-webkit-background-clip:text;background-clip:text;color:transparent}
+.owner>div>p{position:relative;color:#c9cfdd;margin-top:16px;font-size:16px}
+.own-list{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.own-list div{border-radius:16px;padding:16px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12)}
+.own-list b{display:block;font-size:15px}
+.own-list p{color:#c9cfdd;font-size:13.5px;margin-top:6px}
+@media (max-width:900px){.owner{grid-template-columns:1fr}}
+@media (max-width:460px){.own-list{grid-template-columns:1fr}}
+.gets{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+@media (max-width:1000px){.gets{grid-template-columns:1fr 1fr}}
+@media (max-width:600px){.gets{grid-template-columns:1fr}}
+.gets .tr .ic{background:rgba(18,138,82,.1);color:var(--green)}
+.gets .tr b.big{display:block;font:600 30px/1 var(--mono);letter-spacing:-.04em;margin-bottom:10px}
+.monitor{display:flex;flex-direction:column;gap:6px;margin-top:14px}
+.monitor div{display:flex;justify-content:space-between;font:500 11.5px var(--mono);padding:6px 10px;border-radius:8px;background:rgba(24,28,45,.035)}
+.monitor div b{color:var(--green);font-weight:600}
+
+/* Motto */
+.motto{padding:110px 0;text-align:center;overflow:hidden}
+.motto h2{font-size:clamp(46px,9vw,120px);line-height:1.15;letter-spacing:-.045em}
+.swap{position:relative;margin-right:-.1em;display:inline-flex;flex-direction:column;align-items:center;vertical-align:bottom;line-height:1}
+.swap .old{position:relative;color:var(--dim);font-weight:700;font-size:.42em;letter-spacing:-.02em;margin-bottom:.12em}
+.swap .old::after{content:"";position:absolute;left:-6%;top:54%;height:.11em;width:0;background:var(--red);border-radius:9px;transform:rotate(-4deg);transition:width .6s cubic-bezier(.6,0,.2,1)}
+.swap .new{font-family:var(--serif);font-style:italic;font-weight:400;letter-spacing:-.02em;background:var(--grad-text);-webkit-background-clip:text;background-clip:text;color:transparent;opacity:0;transform:translateY(.25em);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1);padding:0 .06em .08em}
+.motto.in .swap .old::after{width:112%}
+.motto.in .swap:nth-of-type(1) .new{opacity:1;transform:none;transition-delay:.55s}
+.motto.in .swap:nth-of-type(2) .old::after{transition-delay:.9s}
+.motto.in .swap:nth-of-type(2) .new{opacity:1;transform:none;transition-delay:1.45s}
+.motto p{color:var(--muted);font-size:clamp(17px,2vw,20px);max-width:640px;margin:34px auto 0}
+.motto .sig{margin-top:22px;font:600 13px var(--mono);color:var(--amber);letter-spacing:.06em;text-transform:uppercase}
+@media (prefers-reduced-motion:reduce){.swap .old::after{width:112%}.swap .new{opacity:1;transform:none}}
+
+/* Compliance */
+.comp{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.law{padding:22px;border-radius:16px;border:1px solid var(--line);background:var(--panel);box-shadow:var(--shadow);transition:transform .3s,border-color .3s}
+.law:hover{transform:translateY(-4px);border-color:rgba(255,181,71,.3)}
+.law code{font:600 13px var(--mono);color:var(--amber)}
+.law h4{font-size:16px;margin:10px 0 6px;letter-spacing:-.01em}
+.law p{font-size:13.5px;color:var(--muted)}
+@media (max-width:900px){.comp{grid-template-columns:1fr 1fr}}
+@media (max-width:520px){.comp{grid-template-columns:1fr}}
+
+/* Numbers */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);border-radius:24px;overflow:hidden;background:var(--panel);box-shadow:var(--shadow)}
+.stat{padding:34px 28px;border-right:1px solid var(--line)}
+.stat:last-child{border-right:0}
+.stat b{display:block;font:600 clamp(38px,5vw,56px)/1 var(--mono);letter-spacing:-.05em}
+.stat b sup{font-size:.45em;vertical-align:top;margin-left:2px;color:var(--amber)}
+.stat span{display:block;color:var(--muted);font-size:14.5px;margin-top:12px}
+@media (max-width:800px){.stats{grid-template-columns:1fr 1fr}.stat:nth-child(2){border-right:0}.stat:nth-child(-n+2){border-bottom:1px solid var(--line)}}
+
+/* Serious */
+.serious{text-align:center}
+.serious h2{font-size:clamp(38px,6.4vw,80px);line-height:1.1;margin:18px 0 22px}
+.serious .lead{margin:0 auto}
+s.was.big{font-size:.5em;letter-spacing:-.02em;font-weight:700}
+s.was.big::after{height:.09em}
+
+/* Trust / deployment */
+.trust{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.tr{padding:28px;border-radius:20px;border:1px solid var(--line);background:#fff;box-shadow:var(--shadow)}
+.tr .ic{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;background:rgba(14,156,136,.1);color:var(--teal);margin-bottom:18px}
+.tr .ic svg{width:21px;height:21px}
+.tr h3{font-size:18px;margin-bottom:8px;letter-spacing:-.02em}
+.tr p{color:var(--muted);font-size:14.5px}
+@media (max-width:900px){.trust{grid-template-columns:1fr 1fr}}
+@media (max-width:600px){.trust{grid-template-columns:1fr}}
+
+/* Developer */
+.dev{display:grid;grid-template-columns:380px 1fr;gap:28px;align-items:stretch}
+.dev-card{position:relative;border-radius:26px;padding:30px;border:1px solid var(--line2);background:linear-gradient(160deg,#fff1dc,#f3efff 60%,#fff);box-shadow:var(--shadow);overflow:hidden}
+.dev-card::before{content:"";position:absolute;width:320px;height:320px;border-radius:50%;right:-120px;top:-140px;background:radial-gradient(circle,rgba(255,150,80,.35),transparent 65%);filter:blur(10px)}
+.avatar{position:relative;width:92px;height:92px;border-radius:26px;background:var(--grad);display:grid;place-items:center;font:800 32px var(--sans);color:#1a0d00;letter-spacing:-.04em;box-shadow:0 20px 50px -15px rgba(255,122,61,.7)}
+.avatar::after{content:"";position:absolute;right:-5px;bottom:-5px;width:22px;height:22px;border-radius:50%;background:var(--green);border:4px solid #fff}
+.dev-card h3{position:relative;font-size:28px;margin:22px 0 4px}
+.dev-card .role{position:relative;color:var(--muted)}
+.dev-card .avail{position:relative;margin-top:18px}
+.links{position:relative;display:flex;gap:10px;margin-top:24px;flex-wrap:wrap}
+.links a{display:inline-flex;align-items:center;gap:8px;height:42px;padding:0 14px;border-radius:12px;border:1px solid var(--line2);background:#fff;font-size:14px;font-weight:600;transition:.2s}
+.links a:hover{background:#fffaf2;transform:translateY(-2px)}
+.links svg{width:18px;height:18px}
+.dev-body{border-radius:26px;padding:32px;border:1px solid var(--line);background:var(--panel);box-shadow:var(--shadow)}
+.dev-body h3{font-size:clamp(24px,3vw,32px);margin-bottom:14px}
+.dev-body>p{color:var(--muted);font-size:16px}
+.dev-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:26px 0}
+.dev-stats div{border-radius:16px;padding:18px;background:rgba(24,28,45,.03);border:1px solid var(--line)}
+.dev-stats b{display:block;font:600 34px/1 var(--mono);letter-spacing:-.04em}
+.dev-stats b sup{font-size:.5em;color:var(--amber);vertical-align:top}
+.dev-stats span{display:block;font-size:13px;color:var(--muted);margin-top:8px}
+.dev-stats b span{display:inline;font-size:inherit;color:inherit;margin:0}
+.skills{display:flex;flex-wrap:wrap;gap:8px}
+.skills span{font-size:13px;padding:7px 13px;border-radius:99px;border:1px solid var(--line2);background:rgba(24,28,45,.03);color:#2c3447}
+.skills span.hot{border-color:rgba(14,156,136,.35);color:var(--teal);background:rgba(14,156,136,.07)}
+@media (max-width:950px){.dev{grid-template-columns:1fr}}
+@media (max-width:520px){.dev-stats{grid-template-columns:1fr 1fr}.dev-stats div:last-child{grid-column:span 2}.dev-body,.dev-card{padding:22px}}
+
+/* FAQ */
+.faq{max-width:820px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
+.faq details{border-radius:16px;border:1px solid var(--line);background:var(--panel);box-shadow:var(--shadow);transition:border-color .2s}
+.faq details[open]{border-color:var(--line2);background:var(--panel2)}
+.faq summary{list-style:none;cursor:pointer;padding:20px 24px;font-weight:600;font-size:16.5px;display:flex;justify-content:space-between;gap:16px;align-items:center}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";flex:none;width:28px;height:28px;border-radius:9px;display:grid;place-items:center;border:1px solid var(--line2);font-size:18px;color:var(--amber);transition:transform .3s}
+.faq details[open] summary::after{transform:rotate(45deg)}
+.faq details p{padding:0 24px 22px;color:var(--muted);font-size:15px}
+
+/* Final CTA */
+.cta-box{position:relative;border-radius:32px;padding:clamp(40px,7vw,84px);text-align:center;overflow:hidden;border:1px solid var(--line2);background:radial-gradient(70% 120% at 15% 0%,rgba(255,190,110,.45),transparent 60%),radial-gradient(60% 100% at 90% 100%,rgba(160,150,255,.3),transparent 60%),#fffaf3;box-shadow:var(--shadow)}
+.cta-box .grid-lines{opacity:.7;mask-image:radial-gradient(60% 70% at 50% 30%,#000,transparent 80%)}
+.cta-box h2{position:relative;font-size:clamp(36px,6vw,68px);max-width:820px;margin:18px auto 18px}
+.cta-box .lead{position:relative;margin:0 auto}
+.cta-box .hero-cta{position:relative;justify-content:center}
+
+.mailrow{position:relative;margin-top:18px;display:flex;gap:10px;justify-content:center;align-items:center;color:var(--muted);font-size:14px}
+.mailrow button{height:30px;padding:0 12px;border-radius:9px;border:1px solid var(--line2);background:#fff;font-size:13px;font-weight:600;color:var(--text)}
+.mailrow button:hover{background:#fffaf2}
+footer{border-top:1px solid var(--line);padding:42px 0 50px;color:var(--dim);font-size:14px}
+footer .wrap{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
+footer nav{display:flex;gap:22px;flex-wrap:wrap}
+footer a:hover{color:var(--text)}
+
+/* Scroll reveal */
+.rv{opacity:0;transform:translateY(28px);transition:opacity .9s cubic-bezier(.2,.7,.2,1),transform .9s cubic-bezier(.2,.7,.2,1)}
+.rv.in{opacity:1;transform:none}
+.rv.d1{transition-delay:.08s}.rv.d2{transition-delay:.16s}.rv.d3{transition-delay:.24s}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  .rv{opacity:1;transform:none}.window{transform:none}
+}
+:focus-visible{outline:2px solid var(--amber);outline-offset:3px;border-radius:8px}
+
+/* Real screens */
+.real .shots-tabs{margin-bottom:22px}
+.browser{border-radius:18px;border:1px solid var(--line2);background:#fff;box-shadow:0 50px 110px -50px rgba(60,40,20,.38);overflow:hidden;max-width:1120px;margin:0 auto}
+.browser-bar{display:flex;align-items:center;gap:7px;padding:11px 14px;border-bottom:1px solid var(--line);background:#faf8f4}
+.browser-bar i{width:10px;height:10px;border-radius:50%;background:#e4ddd2}
+.browser-bar span{margin-left:10px;font:12px var(--mono);color:var(--dim);background:#fff;border:1px solid var(--line);border-radius:8px;padding:4px 12px;flex:1;max-width:340px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.browser-view{position:relative;aspect-ratio:16/10;background:#f7f5f1}
+.browser-view img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top left;opacity:0;transition:opacity .35s ease}
+.browser-view img.on{opacity:1}
+.shots-cap{text-align:center;color:var(--muted);font-size:15px;margin:18px auto 0;max-width:640px;min-height:2.6em}
+@media (prefers-reduced-motion:reduce){.browser-view img{transition:none}}
+</style>
+</head>
+<body>
+<div class="bgfx" aria-hidden="true"><div class="grid-lines"></div></div>
+<div class="bp" aria-hidden="true">
+  <svg class="bp-plan" viewBox="0 0 640 720" focusable="false">
+    <path class="faint" pathLength="1" data-from="0.0000" data-to="0.0183" d="M40 30H600"/>
+    <path class="faint" pathLength="1" data-from="0.0083" data-to="0.0267" d="M40 22V38"/>
+    <path class="faint" pathLength="1" data-from="0.0167" data-to="0.0350" d="M330 22V38"/>
+    <path class="faint" pathLength="1" data-from="0.0250" data-to="0.0433" d="M600 22V38"/>
+    <path class="faint" pathLength="1" data-from="0.0333" data-to="0.0517" d="M620 60V680"/>
+    <path class="faint" pathLength="1" data-from="0.0417" data-to="0.0600" d="M612 60H628"/>
+    <path class="faint" pathLength="1" data-from="0.0500" data-to="0.0683" d="M612 300H628"/>
+    <path class="faint" pathLength="1" data-from="0.0583" data-to="0.0767" d="M612 460H628"/>
+    <path class="faint" pathLength="1" data-from="0.0667" data-to="0.0850" d="M612 680H628"/>
+    <path class="faint" pathLength="1" data-from="0.0750" data-to="0.0933" d="M10 60V680"/>
+    <path class="faint" pathLength="1" data-from="0.0833" data-to="0.1000" d="M2 300H18"/>
+    <path class="faint" pathLength="1" data-from="0.0917" data-to="0.1000" d="M2 500H18"/>
+    <path pathLength="1" data-from="0.0200" data-to="0.0836" d="M40 60H600V680H40Z"/>
+    <path pathLength="1" data-from="0.0489" data-to="0.1124" d="M48 68H592V672H48Z"/>
+    <path pathLength="1" data-from="0.0778" data-to="0.1413" d="M40 300H330"/>
+    <path pathLength="1" data-from="0.1067" data-to="0.1702" d="M330 60V460"/>
+    <path pathLength="1" data-from="0.1356" data-to="0.1991" d="M330 460H600"/>
+    <path pathLength="1" data-from="0.1644" data-to="0.2280" d="M210 300V680"/>
+    <path pathLength="1" data-from="0.1933" data-to="0.2569" d="M40 500H210"/>
+    <path pathLength="1" data-from="0.2222" data-to="0.2800" d="M450 460V680"/>
+    <path pathLength="1" data-from="0.2511" data-to="0.2800" d="M330 210H460V60"/>
+    <path class="thin" pathLength="1" data-from="0.2000" data-to="0.2206" d="M330 360h60A60 60 0 0 0 330 300"/>
+    <path class="thin" pathLength="1" data-from="0.2094" data-to="0.2300" d="M210 560h60A60 60 0 0 0 210 500"/>
+    <path class="thin" pathLength="1" data-from="0.2188" data-to="0.2394" d="M450 560h-60A60 60 0 0 1 450 500"/>
+    <path class="thin" pathLength="1" data-from="0.2281" data-to="0.2488" d="M120 300v-60A60 60 0 0 1 180 300"/>
+    <path class="thin" pathLength="1" data-from="0.2375" data-to="0.2581" d="M520 460v-60A60 60 0 0 1 580 460"/>
+    <path class="thin" pathLength="1" data-from="0.2469" data-to="0.2675" d="M100 55h70"/>
+    <path class="thin" pathLength="1" data-from="0.2562" data-to="0.2769" d="M100 65h70"/>
+    <path class="thin" pathLength="1" data-from="0.2656" data-to="0.2863" d="M420 55h70"/>
+    <path class="thin" pathLength="1" data-from="0.2750" data-to="0.2956" d="M420 65h70"/>
+    <path class="thin" pathLength="1" data-from="0.2844" data-to="0.3050" d="M100 675h70"/>
+    <path class="thin" pathLength="1" data-from="0.2938" data-to="0.3144" d="M100 685h70"/>
+    <path class="thin" pathLength="1" data-from="0.3031" data-to="0.3237" d="M520 675h70"/>
+    <path class="thin" pathLength="1" data-from="0.3125" data-to="0.3331" d="M520 685h70"/>
+    <path class="thin" pathLength="1" data-from="0.3219" data-to="0.3425" d="M35 140v70"/>
+    <path class="thin" pathLength="1" data-from="0.3313" data-to="0.3519" d="M45 140v70"/>
+    <path class="thin" pathLength="1" data-from="0.3406" data-to="0.3613" d="M595 280v70"/>
+    <path class="thin" pathLength="1" data-from="0.3500" data-to="0.3706" d="M605 280v70"/>
+    <path class="thin" pathLength="1" data-from="0.3594" data-to="0.3800" d="M35 580v70"/>
+    <path class="thin" pathLength="1" data-from="0.3688" data-to="0.3894" d="M45 580v70"/>
+    <path class="thin" pathLength="1" data-from="0.3781" data-to="0.3988" d="M352 90h86"/>
+    <path class="thin" pathLength="1" data-from="0.3875" data-to="0.4081" d="M352 103h86"/>
+    <path class="thin" pathLength="1" data-from="0.3969" data-to="0.4175" d="M352 116h86"/>
+    <path class="thin" pathLength="1" data-from="0.4062" data-to="0.4269" d="M352 129h86"/>
+    <path class="thin" pathLength="1" data-from="0.4156" data-to="0.4363" d="M352 142h86"/>
+    <path class="thin" pathLength="1" data-from="0.4250" data-to="0.4456" d="M352 155h86"/>
+    <path class="thin" pathLength="1" data-from="0.4344" data-to="0.4550" d="M352 168h86"/>
+    <path class="thin" pathLength="1" data-from="0.4437" data-to="0.4644" d="M352 181h86"/>
+    <path class="thin" pathLength="1" data-from="0.4531" data-to="0.4738" d="M352 194h86"/>
+    <path class="thin" pathLength="1" data-from="0.4625" data-to="0.4831" d="M352 90V207"/>
+    <path class="thin" pathLength="1" data-from="0.4719" data-to="0.4925" d="M438 90V207"/>
+    <path class="thin" pathLength="1" data-from="0.4813" data-to="0.5000" d="M60 520h130v20H60"/>
+    <path class="thin" pathLength="1" data-from="0.4906" data-to="0.5000" d="M470 480h110v40H470"/>
+  </svg>
+  <svg class="bp-frame" viewBox="0 0 700 760" focusable="false">
+    <path pathLength="1" data-from="0.4600" data-to="0.4787" d="M330 378L330 -12"/>
+    <path pathLength="1" data-from="0.4685" data-to="0.4872" d="M226 438L226 48"/>
+    <path pathLength="1" data-from="0.4770" data-to="0.4957" d="M122 498L122 108"/>
+    <path pathLength="1" data-from="0.4855" data-to="0.5042" d="M434 438L434 48"/>
+    <path pathLength="1" data-from="0.4940" data-to="0.5127" d="M330 498L330 108"/>
+    <path pathLength="1" data-from="0.5025" data-to="0.5212" d="M226 558L226 168"/>
+    <path pathLength="1" data-from="0.5110" data-to="0.5297" d="M538 498L538 108"/>
+    <path pathLength="1" data-from="0.5195" data-to="0.5382" d="M434 558L434 168"/>
+    <path pathLength="1" data-from="0.5280" data-to="0.5467" d="M330 618L330 228"/>
+    <path pathLength="1" data-from="0.5365" data-to="0.5552" d="M642 558L642 168"/>
+    <path pathLength="1" data-from="0.5450" data-to="0.5637" d="M538 618L538 228"/>
+    <path pathLength="1" data-from="0.5535" data-to="0.5722" d="M434 678L434 288"/>
+    <path pathLength="1" data-from="0.5620" data-to="0.5807" d="M330 378L642 558"/>
+    <path pathLength="1" data-from="0.5705" data-to="0.5892" d="M226 438L538 618"/>
+    <path pathLength="1" data-from="0.5790" data-to="0.5977" d="M122 498L434 678"/>
+    <path pathLength="1" data-from="0.5875" data-to="0.6062" d="M330 378L122 498"/>
+    <path pathLength="1" data-from="0.5960" data-to="0.6147" d="M434 438L226 558"/>
+    <path pathLength="1" data-from="0.6045" data-to="0.6232" d="M538 498L330 618"/>
+    <path pathLength="1" data-from="0.6130" data-to="0.6317" d="M642 558L434 678"/>
+    <path pathLength="1" data-from="0.6215" data-to="0.6402" d="M330 248L642 428"/>
+    <path pathLength="1" data-from="0.6300" data-to="0.6487" d="M226 308L538 488"/>
+    <path pathLength="1" data-from="0.6385" data-to="0.6572" d="M122 368L434 548"/>
+    <path pathLength="1" data-from="0.6470" data-to="0.6657" d="M330 248L122 368"/>
+    <path pathLength="1" data-from="0.6555" data-to="0.6742" d="M434 308L226 428"/>
+    <path pathLength="1" data-from="0.6640" data-to="0.6827" d="M538 368L330 488"/>
+    <path pathLength="1" data-from="0.6725" data-to="0.6912" d="M642 428L434 548"/>
+    <path pathLength="1" data-from="0.6810" data-to="0.6997" d="M330 118L642 298"/>
+    <path pathLength="1" data-from="0.6895" data-to="0.7082" d="M226 178L538 358"/>
+    <path pathLength="1" data-from="0.6980" data-to="0.7167" d="M122 238L434 418"/>
+    <path pathLength="1" data-from="0.7065" data-to="0.7252" d="M330 118L122 238"/>
+    <path pathLength="1" data-from="0.7150" data-to="0.7337" d="M434 178L226 298"/>
+    <path pathLength="1" data-from="0.7235" data-to="0.7422" d="M538 238L330 358"/>
+    <path pathLength="1" data-from="0.7320" data-to="0.7507" d="M642 298L434 418"/>
+    <path pathLength="1" data-from="0.7405" data-to="0.7592" d="M330 -12L642 168"/>
+    <path pathLength="1" data-from="0.7490" data-to="0.7677" d="M226 48L538 228"/>
+    <path pathLength="1" data-from="0.7575" data-to="0.7762" d="M122 108L434 288"/>
+    <path pathLength="1" data-from="0.7660" data-to="0.7847" d="M330 -12L122 108"/>
+    <path pathLength="1" data-from="0.7745" data-to="0.7932" d="M434 48L226 168"/>
+    <path pathLength="1" data-from="0.7830" data-to="0.8000" d="M538 108L330 228"/>
+    <path pathLength="1" data-from="0.7915" data-to="0.8000" d="M642 168L434 288"/>
+    <path class="thin" pathLength="1" data-from="0.7400" data-to="0.7730" d="M122 498L226 428"/>
+    <path class="thin" pathLength="1" data-from="0.7550" data-to="0.7880" d="M226 558L122 368"/>
+    <path class="thin" pathLength="1" data-from="0.7700" data-to="0.8030" d="M642 558L538 488"/>
+    <path class="thin" pathLength="1" data-from="0.7850" data-to="0.8180" d="M538 618L642 428"/>
+    <path class="thin" pathLength="1" data-from="0.8000" data-to="0.8330" d="M122 368L226 298"/>
+    <path class="thin" pathLength="1" data-from="0.8150" data-to="0.8480" d="M226 428L122 238"/>
+    <path class="thin" pathLength="1" data-from="0.8300" data-to="0.8630" d="M642 428L538 358"/>
+    <path class="thin" pathLength="1" data-from="0.8450" data-to="0.8780" d="M538 488L642 298"/>
+    <path class="thin" pathLength="1" data-from="0.8600" data-to="0.8930" d="M122 238L226 168"/>
+    <path class="thin" pathLength="1" data-from="0.8750" data-to="0.9080" d="M226 298L122 108"/>
+    <path class="thin" pathLength="1" data-from="0.8900" data-to="0.9230" d="M642 298L538 228"/>
+    <path class="thin" pathLength="1" data-from="0.9050" data-to="0.9380" d="M538 358L642 168"/>
+    <path class="thin" pathLength="1" data-from="0.9200" data-to="0.9530" d="M382 18L174 138"/>
+    <path class="thin" pathLength="1" data-from="0.9350" data-to="0.9680" d="M434 48L226 168"/>
+    <path class="thin" pathLength="1" data-from="0.9500" data-to="0.9830" d="M486 78L278 198"/>
+    <path class="thin" pathLength="1" data-from="0.9650" data-to="0.9950" d="M538 108L330 228"/>
+    <path class="thin" pathLength="1" data-from="0.9800" data-to="0.9950" d="M590 138L382 258"/>
+  </svg>
+</div>
+
+<!-- Icon sprite -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-cart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L21 8H6"/><circle cx="10" cy="20" r="1.3"/><circle cx="17" cy="20" r="1.3"/></symbol>
+    <symbol id="i-box" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c1.9.7 3.1 2.4 3.5 5.2"/></symbol>
+    <symbol id="i-helmet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17h18M5 17a7 7 0 0 1 14 0"/><path d="M10 10V6.5h4V10"/><path d="M3 17v2h18v-2"/></symbol>
+    <symbol id="i-truck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6h11v10H2zM13 10h4l3 3v3h-7"/><circle cx="6" cy="18" r="1.8"/><circle cx="17" cy="18" r="1.8"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6v18h12V7z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></symbol>
+    <symbol id="i-percent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 5L5 19"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h6a2 2 0 0 1 2 2v14a2 2 0 0 0-2-2H4zM20 4h-6a2 2 0 0 0-2 2v14a2 2 0 0 1 2-2h6z"/></symbol>
+    <symbol id="i-cash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.6"/><path d="M6 9.5v5M18 9.5v5"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></symbol>
+    <symbol id="i-server" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
+    <symbol id="i-history" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M11 18h2"/></symbol>
+    <symbol id="i-building" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V5l8-2v18M12 8h8v13M8 8h.01M8 12h.01M8 16h.01M16 12h.01M16 16h.01M2 21h20"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.2 4L19 7"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+    <symbol id="i-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></symbol>
+  </defs>
+</svg>
+
+<header class="nav" id="nav">
+  <div class="wrap">
+    <a href="#top" class="logo" aria-label="StockLedger home">
+      <span class="mark"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#07090f" stroke-width="3.2" stroke-linecap="round"><path d="M5 17h14M5 12h9M5 7h5"/></svg></span>
+      StockLedger
+    </a>
+    <nav class="nav-links" id="navLinks">
+      <a href="#modules">Modules</a>
+      <a href="#tour">Tour</a>
+      <a href="#accounts">Accounts</a>
+      <a href="#compliance">GST &amp; TDS</a>
+      <a href="#product">Quality</a>
+      <a href="#developer">About me</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <a href="#contact" class="btn btn-pri desk">Contact <s class="us" aria-hidden="true">us</s> me</a>
+    <button class="menu-btn" id="menuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="navLinks"><span></span><span></span><span></span></button>
+  </div>
+</header>
+
+<main id="top">
+<!-- HERO -->
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <span class="pill rv"><b>New</b> Machines, labour outturn and site-wise GST, all in one app</span>
+      <h1 class="rv d1">Every site. Every rupee.<br><span class="serif grad-text">One ledger.</span></h1>
+      <p class="lead rv d2">StockLedger runs a construction company end to end: purchase and stock, labour and subcontractors, machines, flat sales, GST, TDS and the books. Built for how Indian sites really work, not adapted from a retail ERP.</p>
+      <div class="hero-cta rv d3">
+        <a href="#tour" class="btn btn-pri">Take the tour <svg><use href="#i-arrow"/></svg></a>
+      </div>
+      <div class="hero-meta rv d3">
+        <span><svg><use href="#i-check"/></svg>Works on the phone at site</span>
+        <span><svg><use href="#i-check"/></svg>Your data on your own server</span>
+        <span><svg><use href="#i-check"/></svg>New features built for you, quickly</span>
+      </div>
+    </div>
+
+    <div class="stage" id="stage">
+      <div class="window" role="img" aria-label="StockLedger dashboard showing open purchase orders, amounts to pay, labour cost, GST payable, cash by project and a to-do list">
+        <div class="win-bar"><i></i><i></i><i></i><span class="win-url">app.stockledger · Dashboard</span></div>
+        <div class="app">
+          <aside class="side">
+            <div class="co"><i></i>Your Company</div>
+            <a class="on"><svg><use href="#i-home"/></svg>Dashboard</a>
+            <a><svg><use href="#i-cart"/></svg>Purchase<span class="badge">4</span></a>
+            <a><svg><use href="#i-box"/></svg>Stock &amp; machines</a>
+            <a><svg><use href="#i-helmet"/></svg>Site work<span class="badge">2</span></a>
+            <a><svg><use href="#i-cash"/></svg>Finance</a>
+            <a><svg><use href="#i-percent"/></svg>GST &amp; TDS</a>
+            <a><svg><use href="#i-book"/></svg>Books</a>
+            <a><svg><use href="#i-users"/></svg>People</a>
+            <a><svg><use href="#i-gear"/></svg>Setup</a>
+          </aside>
+          <div class="main">
+            <div class="main-top">
+              <div><h4>Good morning</h4><small>All sites · November</small></div>
+              <div class="chips"><span class="chip">Week</span><span class="chip on">Month</span><span class="chip">Year</span></div>
+            </div>
+            <div class="kpis">
+              <div class="kpi"><small>Open POs</small><b data-count="18">0</b><em>6 arriving today</em></div>
+              <div class="kpi"><small>Bills to pay</small><b>₹12.4L</b><em class="r">3 overdue</em></div>
+              <div class="kpi"><small>Labour this week</small><b>₹3.82L</b><em>142 people</em></div>
+              <div class="kpi"><small>GST payable</small><b>₹1.96L</b><em>2B matched</em></div>
+            </div>
+            <div class="panels">
+              <div class="panel">
+                <h5>Cash in and out by project <span>₹ lakh</span></h5>
+                <div class="bars" id="bars">
+                  <div class="bar"><div class="pair"><i data-h="78"></i><i data-h="55"></i></div><small>HM</small></div>
+                  <div class="bar"><div class="pair"><i data-h="52"></i><i data-h="61"></i></div><small>GV</small></div>
+                  <div class="bar"><div class="pair"><i data-h="92"></i><i data-h="70"></i></div><small>SR</small></div>
+                  <div class="bar"><div class="pair"><i data-h="40"></i><i data-h="33"></i></div><small>PK</small></div>
+                  <div class="bar"><div class="pair"><i data-h="66"></i><i data-h="48"></i></div><small>LV</small></div>
+                </div>
+                <div class="legend"><span>Received</span><span>Spent</span></div>
+              </div>
+              <div class="panel">
+                <h5>Needs you <span>5</span></h5>
+                <div class="todo">
+                  <div><i style="background:var(--amber)"></i><span>PO-HM-41 waiting for approval</span><b>₹2.1L</b></div>
+                  <div><i style="background:var(--violet)"></i><span>Week 47 labour sheet to approve</span><b>3 teams</b></div>
+                  <div><i style="background:var(--red)"></i><span>JCB-2 service due</span><b>12 h</b></div>
+                  <div><i style="background:var(--teal)"></i><span>RA bill ready to raise</span><b>JC-SR-7</b></div>
+                  <div><i style="background:var(--blue)"></i><span>Cement truck on the way</span><b>GPS</b></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="float f1">
+        <svg class="geo" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" fill="rgba(62,224,197,.08)" stroke="rgba(62,224,197,.45)" stroke-dasharray="3 4"/><circle cx="24" cy="24" r="12" fill="rgba(62,224,197,.16)"/><circle cx="24" cy="24" r="4.5" fill="#3ee0c5"/></svg>
+        <div><small>Selfie check-in · 09:12</small><b>Inside office, 38 m</b><br><span class="ok">Marked present</span></div>
+      </div>
+      <div class="float f2">
+        <small>RA bill raised</small>
+        <b style="font-family:var(--mono);font-size:18px">₹4,82,000</b>
+        <small style="margin-top:4px">60% done · advance &amp; retention taken</small>
+      </div>
+      <div class="float f3">
+        <svg class="ring" viewBox="0 0 42 42" aria-hidden="true"><circle cx="21" cy="21" r="17" fill="none" stroke="rgba(24,28,45,.08)" stroke-width="5"/><circle cx="21" cy="21" r="17" fill="none" stroke="url(#rg)" stroke-width="5" stroke-linecap="round" stroke-dasharray="107" stroke-dashoffset="12" transform="rotate(-90 21 21)"/><defs><linearGradient id="rg"><stop offset="0" stop-color="#ffc65c"/><stop offset="1" stop-color="#ff7a3d"/></linearGradient></defs></svg>
+        <div><small>GSTR-3B · November</small><b>Ready to file</b><br><span class="ok">ITC matched with 2B</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BUILT FOR -->
+<div class="strip">
+  <p>Built for</p>
+  <div class="marquee" aria-label="Built for builders, developers, contractors and more">
+    <div class="marquee-track">
+      <span>Real-estate developers</span><span>Civil contractors</span><span>Apartment builders</span><span>Villa &amp; plot projects</span><span>Government contract work</span><span>Subcontractor-heavy sites</span><span>Multi-company groups</span>
+      <span aria-hidden="true">Real-estate developers</span><span aria-hidden="true">Civil contractors</span><span aria-hidden="true">Apartment builders</span><span aria-hidden="true">Villa &amp; plot projects</span><span aria-hidden="true">Government contract work</span><span aria-hidden="true">Subcontractor-heavy sites</span><span aria-hidden="true">Multi-company groups</span>
+    </div>
+  </div>
+</div>
+
+<!-- PAIN -->
+<section id="why">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <span class="eyebrow">Sound familiar?</span>
+      <h2>Most ERPs were built for shops.<br><span class="serif" style="color:var(--muted)">Your sites aren't shops.</span></h2>
+      <p class="lead">Builders end up paying lakhs for software, then running the real work on Excel, WhatsApp and phone calls. These are the complaints we hear most.</p>
+    </div>
+    <div class="pain-grid">
+      <div class="pain rv"><div class="x"><svg width="16" height="16"><use href="#i-x"/></svg></div><h3>Search for every screen</h3><p>No menus that make sense. You type and search to find each option, every single time.</p><div class="fix"><svg width="16" height="16"><use href="#i-check"/></svg>Clear menus, clickable figures, open any document from its ledger line</div></div>
+      <div class="pain rv d1"><div class="x"><svg width="16" height="16"><use href="#i-x"/></svg></div><h3>A ledger, not real books</h3><p>An “accounts” module that is only a list of entries. Your accountant still redoes everything.</p><div class="fix"><svg width="16" height="16"><use href="#i-check"/></svg>Double-entry books, bank reconciliation, locked months, year-end close</div></div>
+      <div class="pain rv d2"><div class="x"><svg width="16" height="16"><use href="#i-x"/></svg></div><h3>Fixed GST, wrong round-offs</h3><p>One GST rate, no HSN flexibility, totals that are a few paise out on every bill.</p><div class="fix"><svg width="16" height="16"><use href="#i-check"/></svg>GST and HSN per material, exact totals, GSTR-1, 3B, 2B match and 9</div></div>
+      <div class="pain rv"><div class="x"><svg width="16" height="16"><use href="#i-x"/></svg></div><h3>No document numbers</h3><p>Bills and vouchers with no proper series. Nobody can tell which PO a payment was for.</p><div class="fix"><svg width="16" height="16"><use href="#i-check"/></svg>Every PO, GRN, bill, RA bill and voucher numbered by site</div></div>
+      <div class="pain rv d1"><div class="x"><svg width="16" height="16"><use href="#i-x"/></svg></div><h3>Paid for features, never delivered</h3><p>Customisation requests that sit for months, while the monthly charges keep coming.</p><div class="fix"><svg width="16" height="16"><use href="#i-check"/></svg>Built and looked after by me, directly; changes in days, not quarters</div></div>
+      <div class="pain rv d2"><div class="x"><svg width="16" height="16"><use href="#i-x"/></svg></div><h3>Labour, machines: not covered</h3><p>Attendance on paper, subcontractor bills in Excel, machines in someone's diary.</p><div class="fix"><svg width="16" height="16"><use href="#i-check"/></svg>Labour sheets, RA bills, piece-rate gangs and a full machine register</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- MODULES -->
+<section id="modules" style="padding-top:40px">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <span class="eyebrow">Modules</span>
+      <h2>Everything a builder runs,<br><span class="serif grad-text">connected.</span></h2>
+      <p class="lead">Each step feeds the next. A goods receipt brings stock in and raises the bill; paying it posts to the books and to GST. Nothing is typed twice.</p>
+    </div>
+
+    <div class="bento">
+      <div class="cell c-a rv">
+        <div class="ic" style="color:var(--amber)"><svg><use href="#i-cart"/></svg></div>
+        <h3>Purchase to payment, in one flow</h3>
+        <p>Site raises a request, the office orders, the driver's phone marks the delivery at the site, stores receive it, and the bill is ready to pay. With approval limits and a full history on every step.</p>
+        <div class="flow" aria-label="Purchase request, PO, delivery, goods receipt, bill, payment, books">
+          <div class="step"><span class="n">1</span><div>Request<small>PR-HM-112</small></div></div><span class="arrow">→</span>
+          <div class="step"><span class="n">2</span><div>Order<small>PO-HM-41</small></div></div><span class="arrow">→</span>
+          <div class="step"><span class="n">3</span><div>Delivery<small>GPS at site</small></div></div><span class="arrow">→</span>
+          <div class="step"><span class="n">4</span><div>Receipt<small>GRN-HM-88</small></div></div><span class="arrow">→</span>
+          <div class="step"><span class="n">5</span><div>Bill<small>BILL-HM-90</small></div></div><span class="arrow">→</span>
+          <div class="step"><span class="n">6</span><div>Paid<small>Books + GST</small></div></div>
+        </div>
+        <div class="docnums">
+          <div>Purchase order<b>PO-HM-41</b></div><div>Goods receipt<b>GRN-HM-88</b></div><div>RA bill<b>RA-JC-7-3</b></div>
+          <div>Payment<b>PAY-212</b></div><div>Contra<b>CV-14</b></div><div>Machine sale<b>MS-2</b></div>
+        </div>
+      </div>
+
+      <div class="cell c-b rv d1">
+        <div class="ic" style="color:var(--teal)"><svg><use href="#i-pin"/></svg></div>
+        <h3>Selfie &amp; GPS check-in</h3>
+        <p>Staff check in from their phone with a selfie, only inside the office radius. Drivers mark arrival only at the site.</p>
+        <div class="phone" aria-hidden="true">
+          <div class="phone-in">
+            <div class="notch"></div>
+            <div class="selfie"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="9" r="4"/><path d="M4.5 20c1-4 4-6 7.5-6s6.5 2 7.5 6"/></svg></div>
+            <div class="row"><span>Distance</span><b>38 m</b></div>
+            <div class="row"><span>Allowed</span><b>150 m</b></div>
+            <div class="row"><span>Time</span><b>09:12</b></div>
+            <div class="cta">Check in</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cell c-c rv">
+        <div class="ic" style="color:var(--violet)"><svg><use href="#i-users"/></svg></div>
+        <h3>Labour attendance</h3>
+        <p>Week sheets by team, half days, head commission, approve and lock, then the labour bill.</p>
+      </div>
+      <div class="cell c-d rv d1">
+        <div class="ic" style="color:var(--amber)"><svg><use href="#i-helmet"/></svg></div>
+        <h3>Subcontractors &amp; RA bills</h3>
+        <p>Job cards by % or by measurement. RA bills with retention, advance recovery, TDS and GST inside.</p>
+      </div>
+      <div class="cell c-e rv d2">
+        <div class="ic" style="color:var(--green)"><svg><use href="#i-file"/></svg></div>
+        <h3>Piece-rate gangs</h3>
+        <p>Labour outturn: measure the work, verify, approve, and the PRW bill raises itself.</p>
+      </div>
+
+      <div class="cell c-f rv">
+        <div class="ic" style="color:var(--blue)"><svg><use href="#i-truck"/></svg></div>
+        <h3>Machines &amp; assets</h3>
+        <p>Where every JCB, tipper and mixer is, services due, breakdowns, repairs paid in one click, papers expiring, hire charge to each site, depreciation and sale.</p>
+        <ul><li>QR stickers</li><li>Service schedule</li><li>Insurance &amp; RC</li><li>Hire to sites</li></ul>
+      </div>
+      <div class="cell c-g rv d1">
+        <div class="ic" style="color:var(--orange)"><svg><use href="#i-building"/></svg></div>
+        <h3>Flat sales &amp; contract billing</h3>
+        <p>Book units, raise stage demands as the building rises, send demand letters on WhatsApp. For contract work, RA bills to the client with TDS and retention on receipt.</p>
+        <ul><li>Payment plans</li><li>Demand letters</li><li>Client RA bills</li><li>Credit notes</li></ul>
+      </div>
+
+      <div class="cell c-h rv">
+        <div class="ic" style="color:var(--teal)"><svg><use href="#i-cash"/></svg></div>
+        <h3>Payments &amp; site cash</h3>
+        <p>Vouchers with bill photos, approval limits, cash given to site staff and what they spent it on.</p>
+      </div>
+      <div class="cell c-i rv d1">
+        <div class="ic" style="color:var(--amber)"><svg><use href="#i-book"/></svg></div>
+        <h3>Books &amp; reports</h3>
+        <p>Day book, ledgers, trial balance, P&amp;L and balance sheet, site-wise profit, Excel and PDF.</p>
+      </div>
+      <div class="cell c-j rv d2">
+        <div class="ic" style="color:var(--violet)"><svg><use href="#i-shield"/></svg></div>
+        <h3>Payroll &amp; roles</h3>
+        <p>Employees, selfie check-in, leave, salary register and payslips. Each role sees only its own sites and screens.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TOUR -->
+<section id="tour">
+  <div class="wrap">
+    <div class="sec-head center rv">
+      <span class="eyebrow">Product tour</span>
+      <h2>See it the way<br><span class="serif grad-text">your team will.</span></h2>
+    </div>
+
+    <div class="tabs rv" role="tablist" aria-label="Product tour">
+      <button class="tab" role="tab" aria-selected="true" aria-controls="p-gst" id="t-gst">GST returns</button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="p-ra" id="t-ra" tabindex="-1">Subcontractor RA bill</button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="p-mach" id="t-mach" tabindex="-1">Machines</button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="p-labour" id="t-labour" tabindex="-1">Labour attendance</button>
+    </div>
+
+    <!-- Labour -->
+    <div class="pane show" id="p-labour" role="tabpanel" aria-labelledby="t-labour" hidden>
+      <div class="show-copy">
+        <h3>Labour, team by team.</h3>
+        <p>The site engineer marks each person by tapping the day. The office approves, the week locks, and the labour bill is ready to pay, with the head's commission worked out.</p>
+        <ul class="checks">
+          <li>Full day, half day, morning and evening shifts</li>
+          <li>Teams, designations and daily rates per person</li>
+          <li>Approve and lock; corrections leave a trail</li>
+          <li>Export the week to Excel for the contractor</li>
+        </ul>
+      </div>
+      <div class="screen" role="img" aria-label="Weekly labour attendance sheet">
+        <div class="screen-head"><div><b>Masonry team · Week 47</b><br><small>Site HM · 18–24 Nov</small></div><span class="tag a">Waiting for approval</span></div>
+        <div class="att">
+          <div class="h">Person</div><div class="h">M</div><div class="h">T</div><div class="h">W</div><div class="h">T</div><div class="h">F</div><div class="h">S</div><div class="h">S</div><div class="h">Days</div>
+          <div class="nm">Worker One<small>Mason · ₹950</small></div><div class="d p">P</div><div class="d p">P</div><div class="d p">P</div><div class="d h">½</div><div class="d p">P</div><div class="d p">P</div><div class="d s">–</div><div class="t">5.5</div>
+          <div class="nm">Worker Two<small>Mason · ₹950</small></div><div class="d p">P</div><div class="d p">P</div><div class="d a">A</div><div class="d p">P</div><div class="d p">P</div><div class="d p">P</div><div class="d s">–</div><div class="t">5</div>
+          <div class="nm">Worker Three<small>Helper · ₹650</small></div><div class="d p">P</div><div class="d p">P</div><div class="d p">P</div><div class="d p">P</div><div class="d p">P</div><div class="d h">½</div><div class="d s">–</div><div class="t">5.5</div>
+          <div class="nm">Worker Four<small>Helper · ₹650</small></div><div class="d p">P</div><div class="d h">½</div><div class="d p">P</div><div class="d p">P</div><div class="d a">A</div><div class="d p">P</div><div class="d s">–</div><div class="t">4.5</div>
+          <div class="nm">Worker Five<small>Helper · ₹650</small></div><div class="d p">P</div><div class="d p">P</div><div class="d p">P</div><div class="d p">P</div><div class="d p">P</div><div class="d p">P</div><div class="d s">–</div><div class="t">6</div>
+        </div>
+        <div class="screen-foot"><span>26.5 man-days · head commission ₹780</span><span><b>₹21,155</b></span><span class="mini-btn">Approve week</span></div>
+      </div>
+    </div>
+
+    <!-- RA bill -->
+    <div class="pane show" id="p-ra" role="tabpanel" aria-labelledby="t-ra" hidden>
+      <div class="show-copy">
+        <h3>RA bills that work out everything.</h3>
+        <p>Enter how far the work has got. StockLedger works out this bill from the running total, takes back the advance, holds retention, deducts TDS and shows the GST inside, before you save.</p>
+        <ul class="checks">
+          <li>Fixed-value or measured work (sq.ft, cu.m, rft, nos)</li>
+          <li>Advance recovery by % or a fixed amount</li>
+          <li>Retention per subcontractor, released after the defects period</li>
+          <li>TDS under the new section 393, explained in words</li>
+        </ul>
+      </div>
+      <div class="screen" role="img" aria-label="Subcontractor RA bill preview">
+        <div class="screen-head"><div><b>RA bill · JC-SR-7 Plastering</b><br><small>Bill up to 60% · earlier bills 35%</small></div><span class="tag v">Preview</span></div>
+        <div class="rows">
+          <div><span>Work done to date (60% of ₹20,00,000)</span><span>₹12,00,000</span></div>
+          <div><span>Billed before</span><span class="neg">− ₹7,00,000</span></div>
+          <div><span>This bill (GST 18% inside: ₹76,271)</span><span>₹5,00,000</span></div>
+          <div><span>Retention 5%</span><span class="neg">− ₹21,186</span></div>
+          <div><span>Advance taken back</span><span class="neg">− ₹50,000</span></div>
+          <div><span>TDS 1% · section 393</span><span class="neg">− ₹4,237</span></div>
+          <div class="tot"><span>Payable to subcontractor</span><span class="pos">₹4,24,577</span></div>
+        </div>
+        <div class="screen-foot"><span>RA-JC-SR-7-3 · waits in Bills to be paid</span><span class="mini-btn">Raise bill</span></div>
+      </div>
+    </div>
+
+    <!-- GST -->
+    <div class="pane show on" id="p-gst" role="tabpanel" aria-labelledby="t-gst">
+      <div class="show-copy">
+        <h3>GST returns, ready to file.</h3>
+        <p>Every bill, receipt and expense already carries its GST. Returns are worked out for the month, line by line, ready to copy into the portal or download as JSON.</p>
+        <ul class="checks">
+          <li>GSTR-1 with the documents behind every line</li>
+          <li>GSTR-3B with RCM and blocked credit handled</li>
+          <li>GSTR-2B match: claim only what suppliers filed</li>
+          <li>Purchases by HSN, GSTR-9 and 9C</li>
+        </ul>
+      </div>
+      <div class="screen" role="img" aria-label="GSTR-3B summary with 2B match figures">
+        <div class="screen-head"><div><b>GSTR-3B · November</b><br><small>Worked out from 214 documents</small></div><span class="tag g">Ready</span></div>
+        <div class="gst"><code>3.1(a)</code><span>Outward taxable supplies</span><b>₹48,60,000</b></div>
+        <div class="gst"><code>3.1(d)</code><span>Inward supplies, reverse charge (RCM)</span><b>₹1,20,000</b></div>
+        <div class="gst"><code>4(A)(5)</code><span>All other ITC</span><b>₹3,84,210</b></div>
+        <div class="gst"><code>4(B)(1)</code><span>ITC reversed, section 17(5)</span><b>₹12,480</b></div>
+        <div class="gst" style="border:0"><code>6.1</code><span>Tax paid in cash</span><b>₹1,96,330</b></div>
+        <div class="match">
+          <div><small>Matched</small><b style="color:var(--green)">182</b></div>
+          <div><small>GST differs</small><b style="color:var(--amber)">3</b></div>
+          <div><small>Not in 2B</small><b style="color:var(--red)">5</b></div>
+          <div><small>Only in 2B</small><b style="color:var(--blue)">2</b></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Machines -->
+    <div class="pane show" id="p-mach" role="tabpanel" aria-labelledby="t-mach" hidden>
+      <div class="show-copy">
+        <h3>Know where every machine is.</h3>
+        <p>From a JCB to a needle vibrator: which site it is at, when its service is due, what each repair cost, and when its insurance ends. Scan the sticker to open it.</p>
+        <ul class="checks">
+          <li>Moves confirmed by the receiving site</li>
+          <li>Breakdown to repair to payment, with downtime</li>
+          <li>Daily work log and hire charge to the site</li>
+          <li>Depreciation, sale and scrap posted to the books</li>
+        </ul>
+      </div>
+      <div class="screen" role="img" aria-label="Machine register with status and next service">
+        <div class="screen-head"><div><b>Machines &amp; assets</b><br><small>24 machines · 3 sites and the yard</small></div><span class="tag b">QR ready</span></div>
+        <div class="mach">
+          <div><span class="mi">JCB</span><span><b>JCB-2 · Backhoe loader</b><small>Site SR · 2,488 h · service at 2,500 h</small></span><span class="tag r">Service due</span></div>
+          <div><span class="mi">TIP</span><span><b>TIP-4 · Tipper</b><small>On the way to HM · confirm arrival</small></span><span class="tag a">On the way</span></div>
+          <div><span class="mi">MIX</span><span><b>MIX-1 · Concrete mixer</b><small>Site HM · logged today, full day</small></span><span class="tag g">Working</span></div>
+          <div><span class="mi">DG</span><span><b>DG-3 · 62.5 kVA DG set</b><small>Yard · insurance ends in 12 days</small></span><span class="tag v">Idle</span></div>
+        </div>
+        <div class="qr">
+          <svg viewBox="0 0 29 29" aria-hidden="true" shape-rendering="crispEdges"><path fill="#07090f" d="M0 0h7v7H0zM1 1v5h5V1zM2 2h3v3H2zM22 0h7v7h-7zM23 1v5h5V1zM24 2h3v3h-3zM0 22h7v7H0zM1 23v5h5v-5zM2 24h3v3H2zM9 0h2v2H9zM12 1h3v2h-3zM16 0h2v3h-2zM9 4h3v2H9zM14 4h2v3h-2zM18 5h2v2h-2zM10 8h2v2h-2zM0 9h3v2H0zM5 9h3v2H5zM13 9h4v2h-4zM19 9h2v3h-2zM23 9h3v2h-3zM27 9h2v3h-2zM2 13h3v2H2zM8 12h3v3H8zM14 13h2v2h-2zM17 13h3v2h-3zM22 13h2v3h-2zM25 14h3v2h-3zM0 17h2v2H0zM4 17h4v2H4zM10 17h3v2h-3zM15 16h2v4h-2zM19 17h3v2h-3zM24 18h2v2h-2zM9 21h2v3H9zM12 22h4v2h-4zM18 21h2v2h-2zM21 22h3v3h-3zM26 22h3v2h-3zM9 26h3v3H9zM14 26h2v3h-2zM17 25h3v2h-3zM22 26h2v3h-2zM25 26h4v3h-4z"/></svg>
+          <p><b style="color:var(--text)">JCB-2</b> · Backhoe loader<br>Stick it on the machine. Scanning it opens the machine's page: history, papers and the next service.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- REAL SCREENS -->
+<section id="screens" class="real" style="padding-top:40px">
+  <div class="wrap">
+    <div class="sec-head center rv">
+      <span class="eyebrow">Real screens</span>
+      <h2>Not a mock-up.<br><span class="serif grad-text">The app itself.</span></h2>
+    </div>
+    <div class="tabs shots-tabs rv" role="tablist" aria-label="Screens from the app">
+      <button class="tab" role="tab" aria-selected="true" data-shot="dash" data-url="/" data-cap="Dashboard: stock value, dues, buyer receivables and what needs you today.">Dashboard</button>
+      <button class="tab" role="tab" aria-selected="false" data-shot="bills" data-url="/bills" data-cap="Bills: every vendor bill with its PO, invoice number, due date and balance." tabindex="-1">Bills</button>
+      <button class="tab" role="tab" aria-selected="false" data-shot="jobs" data-url="/job-cards" data-cap="Job cards: site work by team and date, with progress and money due." tabindex="-1">Job cards</button>
+      <button class="tab" role="tab" aria-selected="false" data-shot="sales" data-url="/sales" data-cap="Flat sales: stages complete, demands raised, collected and outstanding." tabindex="-1">Flat sales</button>
+      <button class="tab" role="tab" aria-selected="false" data-shot="books" data-url="/accounts" data-cap="Day book: every entry posted by itself, with its By and To lines." tabindex="-1">Day book</button>
+      <button class="tab" role="tab" aria-selected="false" data-shot="fin" data-url="/financials" data-cap="Trial balance: always up to date, opening to closing, with Excel and PDF." tabindex="-1">Trial balance</button>
+    </div>
+    <div class="browser rv">
+      <div class="browser-bar"><i></i><i></i><i></i><span id="shotUrl">app.stockledger /</span></div>
+      <div class="browser-view">
+        <img src="shots/dash.webp" width="2880" height="1800" alt="StockLedger dashboard screen with demo data" data-shot="dash" class="on" decoding="async">
+        <img src="shots/bills.webp" width="2880" height="1800" alt="StockLedger bills screen with demo data" data-shot="bills" loading="lazy" decoding="async">
+        <img src="shots/jobs.webp" width="2880" height="1800" alt="StockLedger job cards screen with demo data" data-shot="jobs" loading="lazy" decoding="async">
+        <img src="shots/sales.webp" width="2880" height="1800" alt="StockLedger flat sales screen with demo data" data-shot="sales" loading="lazy" decoding="async">
+        <img src="shots/books.webp" width="2880" height="1800" alt="StockLedger day book screen with demo data" data-shot="books" loading="lazy" decoding="async">
+        <img src="shots/fin.webp" width="2880" height="1800" alt="StockLedger trial balance screen with demo data" data-shot="fin" loading="lazy" decoding="async">
+      </div>
+    </div>
+    <p class="shots-cap" id="shotCap" aria-live="polite">Dashboard: stock value, dues, buyer receivables and what needs you today.</p>
+    <p class="shots-cap" style="font-size:13px;min-height:0;margin-top:4px;color:var(--dim)">Demo company and invented names; your own data stays on your server.</p>
+  </div>
+</section>
+
+<!-- ACCOUNTS -->
+<section id="accounts" style="padding-top:40px">
+  <div class="wrap acct">
+    <div class="rv">
+      <span class="eyebrow">Accounts</span>
+      <h2 class="strike-title" style="margin:16px 0 18px">No more re-typing at month end.<br><span class="serif grad-text">The books keep themselves.</span></h2>
+      <p class="lead">No re-typing for the accountant at month end. Every bill, payment, receipt, salary and stock movement posts its own double entry the moment it is saved, by site and by party.</p>
+      <div class="acct-list">
+        <div class="acct-item"><b><i>DR</i>Real double entry</b><p>Payment, receipt, journal and contra vouchers, each numbered, each with its By and To lines.</p></div>
+        <div class="acct-item"><b><i>BK</i>Day book &amp; ledgers</b><p>Any account, any party, any period. Click a line to open the bill or voucher behind it.</p></div>
+        <div class="acct-item"><b><i>TB</i>Trial balance, P&amp;L, balance sheet</b><p>Always up to date, for the company or for one site, with Excel and PDF.</p></div>
+        <div class="acct-item"><b><i>₹</i>Bank reconciliation</b><p>Upload the bank statement, tick what matched, and see the reconciled balance.</p></div>
+        <div class="acct-item"><b><i>FA</i>Fixed assets</b><p>Machines and equipment on the books, yearly depreciation posted in one click.</p></div>
+        <div class="acct-item"><b><i>FY</i>Lock &amp; close the year</b><p>Opening balances, lock a month once it is checked, close the financial year cleanly.</p></div>
+      </div>
+    </div>
+    <div class="screen rv d1" role="img" aria-label="Trial balance with voucher types and a reconciled bank account">
+      <div class="screen-head"><div><b>Trial balance</b><br><small>1 Apr to 30 Nov · all sites</small></div><span class="tag g">Balanced</span></div>
+      <div class="vchips"><span class="on">All</span><span>Payment</span><span>Receipt</span><span>Journal</span><span>Contra</span></div>
+      <div class="tb">
+        <div class="th">Account</div><div class="th num">Debit</div><div class="th num">Credit</div>
+        <div>Bank · current account<br><span class="grp">Bank</span></div><div class="num">18,42,500</div><div class="num"></div>
+        <div>Material purchases<br><span class="grp">Direct costs · by site</span></div><div class="num">64,18,320</div><div class="num"></div>
+        <div>Subcontract work<br><span class="grp">Direct costs · by site</span></div><div class="num">22,70,000</div><div class="num"></div>
+        <div>Input GST<br><span class="grp">Duties &amp; taxes</span></div><div class="num">11,05,740</div><div class="num"></div>
+        <div>Sundry creditors<br><span class="grp">Vendors &amp; subcontractors</span></div><div class="num"></div><div class="num">27,36,560</div>
+        <div>Sales: flats &amp; RA bills<br><span class="grp">Income</span></div><div class="num"></div><div class="num">82,60,000</div>
+        <div>TDS payable<br><span class="grp">Duties &amp; taxes</span></div><div class="num"></div><div class="num">40,000</div>
+        <div>Capital<br><span class="grp">Owners</span></div><div class="num"></div><div class="num">6,00,000</div>
+        <div class="sum">Total</div><div class="num sum">1,16,36,560</div><div class="num sum">1,16,36,560</div>
+      </div>
+      <div class="recon"><i>✓</i><span>Bank reconciliation on 30 Nov: <b>matched with the statement</b>, 2 cheques not yet cleared</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- PEOPLE -->
+<section id="people" style="padding-top:40px">
+  <div class="wrap acct rev">
+    <div class="rv d1">
+      <span class="eyebrow">People &amp; payroll</span>
+      <h2 class="strike-title" style="margin:16px 0 18px">From check-in<br><span class="serif grad-text">to payslip.</span></h2>
+      <p class="lead">Office staff and site employees in one place: their records, daily attendance, leave and the month's salary, worked out from the attendance itself.</p>
+      <div class="acct-list">
+        <div class="acct-item"><b><i>ID</i>Employee records</b><p>Personal, PF, ESI and bank details, designation and joining date, all kept per company.</p></div>
+        <div class="acct-item"><b><i>GPS</i>Selfie check-in</b><p>Staff check in from their phone with a selfie, only within the office radius.</p></div>
+        <div class="acct-item"><b><i>REG</i>Attendance register</b><p>The month at a glance: present, half day, CL, PL and absent. Corrections are a tap.</p></div>
+        <div class="acct-item"><b><i>CL</i>Leave &amp; balances</b><p>Leave requests from the phone, approved by the office, with CL and PL balances kept.</p></div>
+        <div class="acct-item"><b><i>%</i>Salary structure</b><p>Earnings and deductions per person: fixed amounts or a % of Basic, PF, ESI, professional tax.</p></div>
+        <div class="acct-item"><b><i>₹</i>Salary register &amp; payslips</b><p>Net pay from paid days, advances taken back, marked paid, and a payslip to print or send.</p></div>
+      </div>
+    </div>
+    <div class="screen rv" role="img" aria-label="Payslip with earnings, deductions, net pay and leave balances">
+      <div class="screen-head">
+        <div class="slip-head"><span class="av">EO</span><div><b>Employee One</b><small>Site supervisor · November payslip</small></div></div>
+        <span class="tag g">Paid</span>
+      </div>
+      <div class="slip">
+        <div><h6>Earnings</h6><div class="rows">
+          <div><span>Basic</span><span>18,000</span></div>
+          <div><span>HRA (40% of Basic)</span><span>7,200</span></div>
+          <div><span>Conveyance</span><span>1,600</span></div>
+          <div class="tot"><span>Gross</span><span>26,800</span></div>
+        </div></div>
+        <div><h6>Deductions</h6><div class="rows">
+          <div><span>PF (12% of Basic)</span><span>2,160</span></div>
+          <div><span>Professional tax</span><span>200</span></div>
+          <div><span>Advance recovery</span><span>1,000</span></div>
+          <div class="tot"><span>Total</span><span>3,360</span></div>
+        </div></div>
+      </div>
+      <div class="net"><span>Net pay · 30 of 30 paid days</span><b>₹23,440</b></div>
+      <div class="leave"><span>CL left <b>4</b></span><span>PL left <b>9</b></span><span>Check-ins <b>26</b></span><span>Paid by <b>NEFT</b></span></div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPLIANCE -->
+<section id="compliance" style="padding-top:40px">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <span class="eyebrow">India-first compliance</span>
+      <h2>The rules your accountant<br><span class="serif grad-text">worries about, handled.</span></h2>
+      <p class="lead">Kept up to date with the Income-tax Act 2025: new section numbers are shown, with the old name a tap away.</p>
+    </div>
+    <div class="comp">
+      <div class="law rv"><code>GSTR-1 · 3B</code><h4>Monthly GST returns</h4><p>From your own bills and receipts, line by line, with JSON for the offline tool.</p></div>
+      <div class="law rv d1"><code>GSTR-2B</code><h4>Supplier match</h4><p>Upload the portal's JSON and see which credit you can claim this month.</p></div>
+      <div class="law rv d2"><code>GSTR-9 · 9C</code><h4>Annual return</h4><p>The year's figures and the reconciliation, from the same data.</p></div>
+      <div class="law rv d3"><code>RCM</code><h4>Reverse charge</h4><p>Paid in cash, claimed back as credit, in the right month.</p></div>
+      <div class="law rv"><code>Sec 393 · Form 140</code><h4>TDS we deduct</h4><p>Worked out on each bill, challans recorded, rows ready for the return utility.</p></div>
+      <div class="law rv d1"><code>Form 131</code><h4>TDS deducted from us</h4><p>Client TDS, retention and GST TDS entered on the receipt.</p></div>
+      <div class="law rv d2"><code>43B(h)</code><h4>MSME 45-day rule</h4><p>Vendors marked micro or small, with bills due inside 45 days flagged.</p></div>
+      <div class="law rv d3"><code>E-way · E-invoice</code><h4>Transport &amp; invoicing</h4><p>E-way bill numbers on transfers above your limit; e-invoice data for client bills.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- SERIOUS -->
+<section id="product" class="serious" style="padding:70px 0 60px">
+  <div class="wrap">
+    <div class="rv">
+      <span class="eyebrow">Speed &amp; quality</span>
+      <h2><s class="was big" aria-hidden="true">StockLedger vs a typical ERP</s><br>Are you serious?<br><span class="serif grad-text">It's a product.</span></h2>
+      <p class="lead">Built for construction from the first line, quick to change and careful with every rupee. Look at what it does, not at a checklist against someone else.</p>
+    </div>
+    <div class="qual" style="margin-top:56px;text-align:left">
+      <div class="tr rv"><div class="ic"><svg><use href="#i-arrow"/></svg></div><b class="big">Days</b><h3>Not months</h3><p>A change you need is planned with you, built, tested and live in days. No ticket queue, no waiting for the next release.</p></div>
+      <div class="tr rv d1"><div class="ic"><svg><use href="#i-shield"/></svg></div><b class="big">280+</b><h3>Automated tests</h3><p>Every change runs the full test suite against a real database, so a new feature never quietly breaks an old one.</p></div>
+      <div class="tr rv d2"><div class="ic"><svg><use href="#i-percent"/></svg></div><b class="big">Exact</b><h3>To the paisa</h3><p>GST, TDS, retention and advances follow the rules line by line, and every figure can be traced back to its document.</p></div>
+      <div class="tr rv d3"><div class="ic"><svg><use href="#i-phone"/></svg></div><b class="big">Quick</b><h3>Clean, fast screens</h3><p>Clear menus, pages that open quickly even with years of data, and screens that work on a site engineer's phone.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- WHAT YOU GET -->
+<section id="benefits" style="padding-top:40px">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <span class="eyebrow">What you get</span>
+      <h2>Looked after,<br><span class="serif grad-text">long after go-live.</span></h2>
+    </div>
+
+    <div class="owner rv">
+      <div>
+        <h3>You're the owner.<br><span class="serif">You get the control.</span></h3>
+        <p>StockLedger runs for your company, on your server, by your rules. Nothing is locked away from you.</p>
+      </div>
+      <div class="own-list">
+        <div><b>Your server</b><p>Runs on a server you control, not shared with any other company.</p></div>
+        <div><b>Your data</b><p>Every record, bill and photo is yours. Export it to Excel any time.</p></div>
+        <div><b>Your rules</b><p>Who sees which site, approval limits on payments, a trail of every change, months locked when checked.</p></div>
+        <div><b>Your pace</b><p>Start with one module on one site and switch on more when you're ready.</p></div>
+      </div>
+    </div>
+
+    <div class="gets">
+      <div class="tr rv"><div class="ic"><svg><use href="#i-shield"/></svg></div><b class="big">1 year</b><h3>Warranty</h3><p>A full year's warranty from go-live. If something doesn't work the way it should, it gets fixed.</p></div>
+      <div class="tr rv d1"><div class="ic"><svg><use href="#i-check"/></svg></div><b class="big">Cost-free</b><h3>Bug fixes</h3><p>Bugs are fixed cost-free during the warranty, with no hours billed and no change requests to sign.</p></div>
+      <div class="tr rv d2"><div class="ic"><svg><use href="#i-gear"/></svg></div><b class="big">Regular</b><h3>Server maintenance</h3><p>Periodic check-ups keep the server healthy: security updates, backups verified, database tuned, disk and certificates watched.</p></div>
+      <div class="tr rv d3"><div class="ic"><svg><use href="#i-server"/></svg></div><b class="big">Watched</b><h3>Monitoring</h3><p>The server is monitored with AWS CloudWatch. Alerts flag problems such as a full disk or the app going down, so they are caught early.</p>
+        <div class="monitor" aria-hidden="true"><div><span>CPU</span><b>18%</b></div><div><span>Disk</span><b>41%</b></div><div><span>App health</span><b>UP</b></div><div><span>Last backup</span><b>01:30</b></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MOTTO -->
+<section class="motto rv" id="promise" aria-label="You demand, I respect">
+  <div class="wrap">
+    <span class="eyebrow">The promise</span>
+    <h2 style="margin-top:24px">You <span class="swap"><span class="old" aria-hidden="true">ask</span><span class="new">Demand</span></span>, <span style="white-space:nowrap">I <span class="swap"><span class="old" aria-hidden="true">do</span><span class="new">Respect</span></span>.</span></h2>
+    <p>What your site needs isn't a favour to ask for or a ticket to wait on. Tell me what you need, and it gets built properly, tested, and in your hands quickly.</p>
+    <div class="sig">Parameswaran · StockLedger</div>
+  </div>
+</section>
+
+<!-- DEVELOPER -->
+<section id="developer">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <span class="eyebrow">About me</span>
+      <h2>Built by an engineer<br><span class="serif grad-text">who ships.</span></h2>
+    </div>
+    <div class="dev">
+      <div class="dev-card rv">
+        <div class="avatar" aria-hidden="true">P</div>
+        <h3>Parameswaran</h3>
+        <p class="role">Full Stack Engineer · Tech Lead<br>Creator of StockLedger</p>
+        <p class="avail"><span class="ok">Available for demos and custom work</span></p>
+        <div class="links">
+          <a href="mailto:praveen.kns.se@gmail.com"><svg><use href="#i-mail"/></svg>Email</a>
+        </div>
+      </div>
+      <div class="dev-body rv d1">
+        <h3>Five years of building software people use every day.</h3>
+        <p>I've delivered 20+ projects across web and mobile, and I work on real-time GPS apps: live tracking, geofences and location-based check-ins. I care about two things: shipping fast, and shipping it right. Every feature in StockLedger is tested before it reaches you, and when you need a change, you talk to the person who builds it.</p>
+        <div class="dev-stats">
+          <div><b><span data-count="5">0</span><sup>+</sup></b><span>Years of experience</span></div>
+          <div><b><span data-count="20">0</span><sup>+</sup></b><span>Projects delivered</span></div>
+          <div><b>GPS</b><span>Real-time tracking apps</span></div>
+        </div>
+        <div class="skills">
+          <span class="hot">Real-time GPS &amp; geofencing</span><span>Java</span><span>Spring Boot</span><span>React</span><span>TypeScript</span><span>PostgreSQL</span><span>REST APIs</span><span>Docker</span><span>Mobile-first web</span><span>GST &amp; accounting logic</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq" style="padding-top:40px">
+  <div class="wrap">
+    <div class="sec-head center rv">
+      <span class="eyebrow">FAQ</span>
+      <h2>Questions builders ask</h2>
+    </div>
+    <div class="faq rv">
+      <details><summary>Can we start with just one part?</summary><p>Yes. Most teams start with the part that hurts most, on one site. The other modules can be switched on later, with no data moved twice.</p></details>
+      <details><summary>Can it run alongside our current ERP?</summary><p>Yes. You can keep your current software for accounts while StockLedger runs the site side, and export what your accountant needs to Excel. Moving fully across can come later.</p></details>
+      <details><summary>Does it work on the phone at site?</summary><p>Yes. It runs in the phone's browser with nothing to install. Site engineers mark labour and receive goods there, staff check in with a selfie, and drivers mark deliveries with GPS.</p></details>
+      <details><summary>Where is our data kept?</summary><p>On a server you control, over HTTPS, with nightly backups of the database and every uploaded photo and document. It's your data, and you can export it any time.</p></details>
+      <details><summary>What does the warranty cover?</summary><p>For one year from go-live, any bug, meaning something that doesn't work the way it should, is fixed at no cost. New features you ask for are planned and built with you separately.</p></details>
+      <details><summary>What is a bug, and what is a feature?</summary><p><b>A bug</b> is something already in StockLedger that doesn't work the way it should: a total that comes out wrong, a button that shows an error, a report that leaves out entries, a screen that breaks on the phone. Bugs are fixed cost-free during the warranty.<br><br><b>A feature</b> is something new, or a change to how StockLedger works: a new report, an extra field, another approval step, a different document format, a link to another system. Features are discussed, planned and agreed with you separately.</p></details>
+      <details><summary>Who looks after the server?</summary><p>The server is monitored with AWS CloudWatch and gets periodic maintenance: security updates, backup checks, database and disk health, and HTTPS certificates. Alerts flag problems early, so they are looked at before they grow.</p></details>
+      <details><summary>What if you're not available?</summary><p>StockLedger is built on standard, widely used technology (Java, Spring Boot, React and PostgreSQL) that any experienced developer can pick up. It comes with documentation, deployment scripts and nightly backups, and access to the source code if I can't continue (source-code escrow) can be written into the agreement.</p></details>
+      <details><summary>Can you add a feature we need?</summary><p>Yes. I build and look after StockLedger myself, so a feature you need is a conversation, not a ticket in a queue. It is planned with you, tested and delivered in days.</p></details>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section id="contact" style="padding-top:40px">
+  <div class="wrap">
+    <div class="cta-box rv">
+      <div class="grid-lines" aria-hidden="true"></div>
+      <span class="eyebrow" style="position:relative">Let's talk</span>
+      <h2>See your own sites in StockLedger in <span class="serif grad-text">15 minutes.</span></h2>
+      <p class="lead">A short demo on the parts you care about. No slides, just the app.</p>
+      <div class="hero-cta">
+        <a href="mailto:praveen.kns.se@gmail.com?subject=StockLedger" class="btn btn-pri"><svg><use href="#i-mail"/></svg>Contact <s class="us" aria-hidden="true">us</s> me</a>
+      </div>
+      <p class="mailrow"><span>praveen.kns.se@gmail.com</span><button type="button" id="copyMail">Copy</button></p>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <a href="#top" class="logo"><span class="mark"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#07090f" stroke-width="3.2" stroke-linecap="round"><path d="M5 17h14M5 12h9M5 7h5"/></svg></span>StockLedger</a>
+    <nav><a href="#modules">Modules</a><a href="#tour">Tour</a><a href="#compliance">GST &amp; TDS</a><a href="#developer">About me</a><a href="#contact">Contact me</a></nav>
+    <span>© <span id="year">2026</span> StockLedger. Built in India.</span>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  {
+    const tabs = [...document.querySelectorAll('.shots-tabs .tab')];
+    const imgs = [...document.querySelectorAll('.browser-view img')];
+    const pick = (t, focus) => {
+      tabs.forEach(b => { const on = b === t; b.setAttribute('aria-selected', on); b.tabIndex = on ? 0 : -1; });
+      imgs.forEach(i => i.classList.toggle('on', i.dataset.shot === t.dataset.shot));
+      document.getElementById('shotUrl').textContent = 'app.stockledger ' + t.dataset.url;
+      document.getElementById('shotCap').textContent = t.dataset.cap;
+      if (focus) t.focus();
+      const bar = t.parentElement;
+      bar.scrollTo({ left: t.offsetLeft - (bar.clientWidth - t.offsetWidth) / 2, behavior: reduce ? 'auto' : 'smooth' });
+    };
+    tabs.forEach((t, i) => {
+      t.addEventListener('click', () => pick(t));
+      t.addEventListener('keydown', e => {
+        const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if (d) { e.preventDefault(); pick(tabs[(i + d + tabs.length) % tabs.length], true); }
+      });
+    });
+  }
+
+  const nav = document.getElementById('nav');
+  const onScroll = () => nav.classList.toggle('scrolled', scrollY > 10);
+  addEventListener('scroll', onScroll, { passive: true }); onScroll();
+
+  const menuBtn = document.getElementById('menuBtn');
+  menuBtn.addEventListener('click', () => {
+    const open = nav.classList.toggle('open');
+    menuBtn.setAttribute('aria-expanded', open);
+  });
+  document.querySelectorAll('#navLinks a').forEach(a => a.addEventListener('click', () => {
+    nav.classList.remove('open'); menuBtn.setAttribute('aria-expanded', 'false');
+  }));
+
+  const countUp = el => {
+    const end = +el.dataset.count;
+    if (reduce) { el.textContent = end; return; }
+    const t0 = performance.now(), dur = 1400;
+    const tick = now => {
+      const p = Math.min(1, (now - t0) / dur);
+      el.textContent = Math.round(end * (1 - Math.pow(1 - p, 3)));
+      if (p < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  };
+  const growBars = () => document.querySelectorAll('#bars i').forEach((b, i) =>
+    setTimeout(() => { b.style.height = b.dataset.h + '%'; }, reduce ? 0 : 120 * i));
+
+  const io = new IntersectionObserver(entries => entries.forEach(e => {
+    if (!e.isIntersecting) return;
+    const el = e.target;
+    el.classList.add('in');
+    el.querySelectorAll('[data-count]').forEach(countUp);
+    if (el.id === 'stage') growBars();
+    io.unobserve(el);
+  }), { threshold: .15 });
+  document.querySelectorAll('.rv, #stage').forEach(el => io.observe(el));
+
+  // Glow follows the pointer on module cards.
+  document.querySelectorAll('.cell').forEach(c => c.addEventListener('pointermove', e => {
+    const r = c.getBoundingClientRect();
+    c.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+    c.style.setProperty('--my', (e.clientY - r.top) + 'px');
+  }));
+
+  const tabs = [...document.querySelectorAll('#tour .tab')];
+  const select = tab => {
+    tabs.forEach(t => {
+      const on = t === tab;
+      t.setAttribute('aria-selected', on);
+      t.tabIndex = on ? 0 : -1;
+      const pane = document.getElementById(t.getAttribute('aria-controls'));
+      pane.hidden = !on; pane.classList.toggle('on', on);
+    });
+  };
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => select(t));
+    t.addEventListener('keydown', e => {
+      const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (!d) return;
+      const next = tabs[(i + d + tabs.length) % tabs.length];
+      select(next); next.focus();
+    });
+  });
+
+  const copy = document.getElementById('copyMail');
+  copy.addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText('praveen.kns.se@gmail.com'); copy.textContent = 'Copied'; }
+    catch { copy.textContent = 'Select and copy'; }
+    setTimeout(() => { copy.textContent = 'Copy'; }, 2000);
+  });
+
+  // Blueprint: each line draws over its own stretch of the page, finishing at the bottom; on load the first lines start by themselves.
+  if (!reduce) {
+    const lines = [...document.querySelectorAll('.bp path')].map(el => ({ el, from: +el.dataset.from, to: +el.dataset.to }));
+    const plan = document.querySelector('.bp-plan'), frame = document.querySelector('.bp-frame');
+    let intro = 0, ticking = false;
+    const draw = () => {
+      ticking = false;
+      const max = Math.max(1, document.documentElement.scrollHeight - innerHeight);
+      const t = Math.min(1, scrollY / max), at = t + intro;
+      for (const l of lines) {
+        const k = Math.max(0, Math.min(1, (at - l.from) / (l.to - l.from)));
+        l.el.style.strokeDashoffset = 1 - k;
+      }
+      plan.style.transform = `translateY(${-t * 80}px) rotate(${-8 + t * 5}deg)`;
+      frame.style.transform = `translateY(${(1 - t) * 60}px)`;
+    };
+    const start = performance.now();
+    const introStep = now => {
+      const k = Math.min(1, (now - start) / 2600);
+      intro = 0.04 * (1 - Math.pow(1 - k, 3));
+      draw();
+      if (k < 1) requestAnimationFrame(introStep);
+    };
+    requestAnimationFrame(introStep);
+    addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(draw); } }, { passive: true });
+    addEventListener('resize', draw);
+    draw();
+  }
+
+  document.getElementById('year').textContent = new Date().getFullYear();
+})();
+</script>
+</body>
 </html>
