@@ -73,7 +73,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .nav-links{display:flex;gap:26px;margin-left:auto;font-size:14.5px;color:var(--muted)}
 .nav-links a{transition:color .2s}.nav-links a:hover{color:var(--text)}
 .nav .btn{margin-left:8px}
-@media (max-width:1180px) and (min-width:901px){.nav-links{gap:16px;font-size:13.5px}.nav-links a[href="#faq"],.nav-links a[href="#product"]{display:none}}
+@media (max-width:1180px) and (min-width:901px){.nav-links{gap:16px;font-size:13.5px}.nav-links a[href="#faq"],.nav-links a[href="#product"],.nav-links a[href="#accounts"]{display:none}}
 .menu-btn{display:none;margin-left:auto;width:40px;height:40px;border-radius:10px;border:1px solid var(--line2)}
 .menu-btn span{display:block;width:18px;height:2px;background:var(--text);margin:4px auto;border-radius:2px;transition:transform .3s,opacity .3s}
 @media (max-width:900px){
@@ -527,6 +527,16 @@ footer a:hover{color:var(--text)}
 .browser-view img.on{opacity:1}
 .shots-cap{text-align:center;color:var(--muted);font-size:15px;margin:18px auto 0;max-width:640px;min-height:2.6em}
 @media (prefers-reduced-motion:reduce){.browser-view img{transition:none}}
+
+/* Custom work */
+.cw{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+@media (max-width:1000px){.cw{grid-template-columns:1fr 1fr}}
+@media (max-width:600px){.cw{grid-template-columns:1fr}}
+.cw .tr .ic{background:rgba(110,90,230,.1);color:#5b48c8}
+.cw-foot{display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap;margin-top:28px;padding:24px 28px;border-radius:20px;border:1px solid var(--line2);background:linear-gradient(120deg,#fff6ea,#f4f1ff)}
+.cw-foot .flow{margin-top:0}
+.cw-foot .step{background:#fff}
+@media (max-width:600px){.cw-foot{padding:20px}.cw-foot .btn{width:100%;justify-content:center}}
 </style>
 </head>
 <body>
@@ -689,6 +699,7 @@ footer a:hover{color:var(--text)}
       <a href="#compliance">GST &amp; TDS</a>
       <a href="#product">Quality</a>
       <a href="#developer">About me</a>
+      <a href="#custom">Custom apps</a>
       <a href="#faq">FAQ</a>
     </nav>
     <a href="#contact" class="btn btn-pri desk">Contact <s class="us" aria-hidden="true">us</s> me</a>
@@ -1239,16 +1250,43 @@ footer a:hover{color:var(--text)}
       </div>
       <div class="dev-body rv d1">
         <h3>Five years of building software people use every day.</h3>
-        <p>I've delivered 20+ projects across web and mobile, and I work on real-time GPS apps: live tracking, geofences and location-based check-ins. I care about two things: shipping fast, and shipping it right. Every feature in StockLedger is tested before it reaches you, and when you need a change, you talk to the person who builds it.</p>
+        <p>I'm an expert in real-time applications: live GPS tracking, geofencing, location-based check-ins and live delivery tracking, across web and mobile. I care about two things: shipping fast, and shipping it right. Every feature in StockLedger is tested before it reaches you, and when you need a change, you talk to the person who builds it.</p>
         <div class="dev-stats">
           <div><b><span data-count="5">0</span><sup>+</sup></b><span>Years of experience</span></div>
-          <div><b><span data-count="20">0</span><sup>+</sup></b><span>Projects delivered</span></div>
+          <div><b>Live</b><span>Real-time applications expert</span></div>
           <div><b>GPS</b><span>Real-time tracking apps</span></div>
         </div>
         <div class="skills">
-          <span class="hot">Real-time GPS &amp; geofencing</span><span>Java</span><span>Spring Boot</span><span>React</span><span>TypeScript</span><span>PostgreSQL</span><span>REST APIs</span><span>Docker</span><span>Mobile-first web</span><span>GST &amp; accounting logic</span>
+          <span class="hot">Real-time applications</span><span class="hot">GPS tracking &amp; geofencing</span><span>Java</span><span>Spring Boot</span><span>React</span><span>TypeScript</span><span>PostgreSQL</span><span>REST APIs</span><span>Docker</span><span>Mobile-first web</span><span>GST &amp; accounting logic</span>
         </div>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- CUSTOM WORK -->
+<section id="custom" style="padding-top:40px">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <span class="eyebrow">Custom applications</span>
+      <h2>Need an app built<br><span class="serif grad-text">for your business?</span></h2>
+      <p class="lead">StockLedger shows how I work. The same care goes into software built around your own work, whatever your business is.</p>
+    </div>
+
+    <div class="cw">
+      <div class="tr rv"><div class="ic"><svg><use href="#i-pin"/></svg></div><h3>Real-time apps</h3><p>Live GPS tracking, geofences, location-based check-ins and live status for people, vehicles and deliveries.</p></div>
+      <div class="tr rv d1"><div class="ic"><svg><use href="#i-book"/></svg></div><h3>Business software</h3><p>Inventory, billing, approvals, payroll and accounts, shaped around how your team already works.</p></div>
+      <div class="tr rv d2"><div class="ic"><svg><use href="#i-phone"/></svg></div><h3>Mobile-first web apps</h3><p>Apps your staff use from the phone in the field, and the office uses on a big screen. No app store needed.</p></div>
+      <div class="tr rv d3"><div class="ic"><svg><use href="#i-gear"/></svg></div><h3>Connecting your tools</h3><p>REST APIs and data links between the systems you already have, so nobody types the same thing twice.</p></div>
+    </div>
+
+    <div class="cw-foot rv">
+      <div class="flow" aria-label="How a custom app gets built">
+        <div class="step"><span class="n">01</span><div>Tell me what you need<small>a call, no forms</small></div></div>
+        <div class="step"><span class="n">02</span><div>See a working demo<small>early, then every step</small></div></div>
+        <div class="step"><span class="n">03</span><div>Own it, on your server<small>your code, your data</small></div></div>
+      </div>
+      <a href="mailto:praveen.kns.se@gmail.com?subject=Custom%20application" class="btn btn-pri"><svg><use href="#i-mail"/></svg>Talk to me about it</a>
     </div>
   </div>
 </section>
@@ -1294,7 +1332,7 @@ footer a:hover{color:var(--text)}
 <footer>
   <div class="wrap">
     <a href="#top" class="logo"><span class="mark"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#07090f" stroke-width="3.2" stroke-linecap="round"><path d="M5 17h14M5 12h9M5 7h5"/></svg></span>StockLedger</a>
-    <nav><a href="#modules">Modules</a><a href="#tour">Tour</a><a href="#compliance">GST &amp; TDS</a><a href="#developer">About me</a><a href="#contact">Contact me</a></nav>
+    <nav><a href="#modules">Modules</a><a href="#tour">Tour</a><a href="#compliance">GST &amp; TDS</a><a href="#developer">About me</a><a href="#custom">Custom apps</a><a href="#contact">Contact me</a></nav>
     <span>© <span id="year">2026</span> StockLedger. Built in India.</span>
   </div>
 </footer>
